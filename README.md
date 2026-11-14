@@ -49,7 +49,9 @@ citing its function. Other numbers are in `data/rules.ts`.
   the escape's land-mass halving and spaceship condition aren't modelled, and a person is never offered the escape.
 - **Nuclear Plant meltdowns** in disorder aren't modelled.
 - **Communism's veteran Diplomats** (`city_process_production_unit`) aren't modelled.
-- **Superhighways** read each square's `yields()` and count only a Road (or the city's square), not a Railroad alone.
+- **Superhighways** read each square's `yields()` and count only a Road (or the city's square), not a Railroad alone;
+  their half is added to the city's total, so after pollution's halving, and without the celebration +1 or the Colossus,
+  where Civ2 adds it to the square before pollution.
 - **The Palace escape** counts the loser's cities and the captured city's size after civ2-city's capture rules have run
   (Civ2 counts before), and measures distance by the world's own metric rather than Civ2's diagonal one, so it can be
   one off at its thresholds.

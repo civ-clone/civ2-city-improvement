@@ -21,6 +21,7 @@ import { Registries, withDefaults } from '../../lib/source';
 import { paysUpkeep, upkeepFor } from '../../lib/upkeep';
 import City from '@civ-clone/core-city/City';
 import Cost from '@civ-clone/core-city/Rules/Cost';
+import MilitaryUnhappiness from '@civ-clone/base-city-yield-military-unhappiness/MilitaryUnhappiness';
 import Criterion from '@civ-clone/core-rule/Criterion';
 import { DEMOCRACY } from '@civ-clone/civ2-rules/data/governments';
 import Effect from '@civ-clone/core-rule/Effect';
@@ -38,6 +39,14 @@ export interface CostDependencies extends Registries {
   gameDifficultyRegistry?: GameDifficultyRegistry;
   playerGovernmentRegistry?: PlayerGovernmentRegistry;
 }
+
+/**
+ * The unhappy citizens the improvements can make content: all but those military unhappiness makes, which Civ2 adds
+ *  after them (`city_calc_trade_happiness` stage 3), so they never calm it.
+ */
+const stageTwoUnhappy = (yields: Yield[]): number =>
+  reduceYield(yields, Unhappiness) -
+  reduceYield(yields, MilitaryUnhappiness as unknown as typeof Yield);
 
 /** Each improvement's @IMPROVE row, the order Civ2 pays upkeep in (`city_pay_improvement_upkeep`). */
 const rowOf = new Map<Function, number>(
@@ -107,14 +116,13 @@ export const getRules = (dependencies: CostDependencies = {}): Cost[] => {
           (city: City, yields: Yield[]): boolean => of(city, yields) !== null
         ),
         new Criterion(
-          (city: City, yields: Yield[]): boolean =>
-            reduceYield(yields, Unhappiness) > 0
+          (city: City, yields: Yield[]): boolean => stageTwoUnhappy(yields) > 0
         ),
         new Effect((city: City, yields: Yield[]): Yield => {
           const { source, value } = of(city, yields)!;
 
           return new CityImprovementContent(
-            Math.min(value, reduceYield(yields, Unhappiness)),
+            Math.min(value, stageTwoUnhappy(yields)),
             source
           );
         })

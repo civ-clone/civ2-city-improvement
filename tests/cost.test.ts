@@ -39,6 +39,8 @@ import Cost from '@civ-clone/core-city/Rules/Cost';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
 import Yield from '@civ-clone/core-yield/Yield';
 import cost from '../Rules/City/cost';
+import MilitaryUnhappiness from '@civ-clone/base-city-yield-military-unhappiness/MilitaryUnhappiness';
+import { reduceYield } from '@civ-clone/core-yield/lib/reduceYields';
 import Effect from '@civ-clone/core-rule/Effect';
 import YieldRule from '@civ-clone/core-city/Rules/Yield';
 import { expect } from 'chai';
@@ -187,6 +189,35 @@ describe('city:cost', (): void => {
       ['Colosseum', 3],
       ['Temple', 2],
     ]);
+  });
+
+  it("doesn't calm military unhappiness, which Civ2 adds after the improvements", (): void => {
+    const r = registries([CeremonialBurial, Mysticism]),
+      ruleRegistry = new RuleRegistry(),
+      city = cityOf('p', { _ruleRegistry: ruleRegistry });
+
+    // Democracy: 1 born unhappy, one aggressive unit abroad making 2 more, and a Temple worth 2.
+    ruleRegistry.register(
+      new YieldRule(
+        'born-unhappy',
+        new Effect((): Yield => new Unhappiness(1))
+      ),
+      new YieldRule(
+        'military',
+        new Effect(
+          (): Yield => new MilitaryUnhappiness(2, { id: () => 'unit' } as any)
+        )
+      ),
+      ...cost({
+        ...r,
+        clientRegistry: playedBy('p'),
+        gameDifficultyRegistry: atLevel(3),
+        playerGovernmentRegistry: governedBy(Democracy),
+      })
+    );
+    r.cityImprovementRegistry.register(built(Temple, city));
+
+    expect(reduceYield(city.yields(), Unhappiness)).equal(2);
   });
 
   it('under Democracy a Courthouse or the Palace makes one citizen happy', (): void => {

@@ -9,6 +9,7 @@ const PlayerGovernmentRegistry_1 = require("@civ-clone/core-government/PlayerGov
 const source_1 = require("../../lib/source");
 const upkeep_1 = require("../../lib/upkeep");
 const Cost_1 = require("@civ-clone/core-city/Rules/Cost");
+const MilitaryUnhappiness_1 = require("@civ-clone/base-city-yield-military-unhappiness/MilitaryUnhappiness");
 const Criterion_1 = require("@civ-clone/core-rule/Criterion");
 const governments_1 = require("@civ-clone/civ2-rules/data/governments");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
@@ -19,6 +20,12 @@ const improvements_1 = require("../../data/improvements");
 const has_1 = require("@civ-clone/base-city-improvement-rules/lib/has");
 const isHuman_1 = require("@civ-clone/civ2-difficulty/isHuman");
 const reduceYields_1 = require("@civ-clone/core-yield/lib/reduceYields");
+/**
+ * The unhappy citizens the improvements can make content: all but those military unhappiness makes, which Civ2 adds
+ *  after them (`city_calc_trade_happiness` stage 3), so they never calm it.
+ */
+const stageTwoUnhappy = (yields) => (0, reduceYields_1.reduceYield)(yields, Yields_1.Unhappiness) -
+    (0, reduceYields_1.reduceYield)(yields, MilitaryUnhappiness_1.default);
 /** Each improvement's @IMPROVE row, the order Civ2 pays upkeep in (`city_pay_improvement_upkeep`). */
 const rowOf = new Map(improvements_1.default.map(([Improvement], index) => [Improvement, index]));
 const getRules = (dependencies = {}) => {
@@ -55,9 +62,9 @@ const getRules = (dependencies = {}) => {
                 }
                 return known.get(yields);
             };
-            return new Cost_1.default(`civ2-city-improvement:city/cost/content/${content.name}`, new Low_1.default(), new Criterion_1.default((city, yields) => of(city, yields) !== null), new Criterion_1.default((city, yields) => (0, reduceYields_1.reduceYield)(yields, Yields_1.Unhappiness) > 0), new Effect_1.default((city, yields) => {
+            return new Cost_1.default(`civ2-city-improvement:city/cost/content/${content.name}`, new Low_1.default(), new Criterion_1.default((city, yields) => of(city, yields) !== null), new Criterion_1.default((city, yields) => stageTwoUnhappy(yields) > 0), new Effect_1.default((city, yields) => {
                 const { source, value } = of(city, yields);
-                return new Yields_1.CityImprovementContent(Math.min(value, (0, reduceYields_1.reduceYield)(yields, Yields_1.Unhappiness)), source);
+                return new Yields_1.CityImprovementContent(Math.min(value, stageTwoUnhappy(yields)), source);
             }));
         }),
         // Under Democracy a Courthouse, or the Palace, makes one content citizen happy.
