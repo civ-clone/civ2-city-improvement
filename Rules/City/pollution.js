@@ -21,7 +21,7 @@ const level_1 = require("@civ-clone/civ2-difficulty/level");
 const pollute_1 = require("@civ-clone/base-city-pollution/lib/pollute");
 const core_random_1 = require("@civ-clone/core-random");
 // Each turn a person's city with pollution (`lib/pollution`) may pollute one of the squares around it; as Civ2, no
-//  computer player's city does (OpenCiv2 `city_process`, which calls `city_process_pollution` only for a human player,
+//  computer player's city does (OpenCiv2 `city_process_turn`, which calls `city_process_pollution` only for a human player,
 //  richardpenman/civ2@49f26ec). Once a turn: the consolidated shields are processed once a city.
 const getRules = (dependencies = {}) => {
     const registries = (0, source_1.withDefaults)(dependencies), { cityGrowthRegistry = CityGrowthRegistry_1.instance, cityRegistry = CityRegistry_1.instance, clientRegistry = ClientRegistry_1.instance, engine = Engine_1.instance, gameDifficultyRegistry = GameDifficultyRegistry_1.instance, randomNumberGenerator = core_random_1.instance, ruleRegistry = RuleRegistry_1.instance, tileImprovementRegistry = TileImprovementRegistry_1.instance, } = dependencies;

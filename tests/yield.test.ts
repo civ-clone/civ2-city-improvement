@@ -5,6 +5,8 @@ import {
   Harbour,
   Library,
   ManufacturingPlant,
+  OffshorePlatform,
+  Superhighways,
   Marketplace,
   PowerPlant,
   ResearchLab,
@@ -28,6 +30,7 @@ import Effect from '@civ-clone/core-rule/Effect';
 import { Fundamentalism } from '@civ-clone/civ2-government/Governments';
 import High from '@civ-clone/core-rule/Priorities/High';
 import { Ocean } from '@civ-clone/civ2-world/Terrains';
+import { Road } from '@civ-clone/civ2-world/TileImprovements';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
 import Yield from '@civ-clone/core-yield/Yield';
 import YieldRule from '@civ-clone/core-city/Rules/Yield';
@@ -43,7 +46,10 @@ const setUp = (
   corruption: number,
   Government: any = undefined
 ) => {
-  const r = registries(),
+  const r = {
+      ...registries(),
+      tileImprovements: new Map<unknown, unknown[]>(),
+    },
     ruleRegistry = new RuleRegistry(),
     tiles: unknown[] = [],
     city: City = cityOf('p', {
@@ -70,6 +76,9 @@ const setUp = (
     ...yieldRules({
       ...r,
       playerGovernmentRegistry: governedBy(Government),
+      tileImprovementRegistry: {
+        getByTile: (tile: unknown) => r.tileImprovements.get(tile) ?? [],
+      } as any,
     }),
     ...yieldModifiers(r)
   );
@@ -102,6 +111,45 @@ describe('city:yield, the Courthouse', (): void => {
       withCourthouse.total(Research),
       withCourthouse.total(Gold),
     ]).eql([-3, 8, 9]);
+  });
+});
+
+describe('city:yield, the Courthouse and the Palace', (): void => {
+  it("doesn't halve again in the Palace's city, which civ2-city has already halved", (): void => {
+    const { city, r, total } = setUp([new Trade(20)], 7);
+
+    r.cityImprovementRegistry.register(
+      built(Courthouse, city),
+      built(require('../CityImprovements').Palace, city)
+    );
+
+    expect(total(Corruption)).equal(-7);
+  });
+});
+
+describe('city:yield, squares', (): void => {
+  it('an Offshore Platform adds 1 shield for each ocean square worked', (): void => {
+    const { city, r, tiles, total } = setUp([new Production(2)], 0);
+
+    tiles.push({ terrain: () => new Ocean() }, { terrain: () => ({}) });
+    r.cityImprovementRegistry.register(built(OffshorePlatform, city));
+    expect(total(Production)).equal(3);
+  });
+
+  it('Superhighways add half the trade, rounded down, of each square with a road or the city', (): void => {
+    const { city, r, tiles, total } = setUp([new Trade(0)], 0),
+      road = new Road(),
+      trade = (value: number) => ({
+        terrain: () => ({}),
+        yields: () => [new Trade(value)],
+      });
+
+    tiles.push(trade(3), trade(5), trade(4));
+    (city as any).tile = () => tiles[2];
+    r.tileImprovements.set(tiles[0], [road]);
+    r.cityImprovementRegistry.register(built(Superhighways, city));
+    // 3 with a road: +1; 5 without: nothing; 4 on the city's square: +2.
+    expect(total(Trade)).equal(3);
   });
 });
 

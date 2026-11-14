@@ -2,14 +2,13 @@ import {
   TerrainFeatureRegistry,
   instance as terrainFeatureRegistryInstance,
 } from '@civ-clone/core-terrain-feature/TerrainFeatureRegistry';
-import { Mountains } from '@civ-clone/civ2-world/Terrains';
 import City from '@civ-clone/core-city/City';
-import { River } from '@civ-clone/civ2-world/TerrainFeatures';
+import hydroPossible from '@civ-clone/civ2-world/lib/hydro';
 import Tile from '@civ-clone/core-world/Tile';
 
 // OpenCiv2 `src/auto/city.cpp` `city_create` (richardpenman/civ2@49f26ec) sets a city's site flags from the 9 squares
 //  of its own and its neighbours': `CITYF_COASTAL` for any ocean, `CITYF_OCEAN_ACCESS` for ocean that is more than a
-//  one-square lake, and `CITYF_HYDRO_POSSIBLE` for a river or mountains.
+//  one-square lake, and `CITYF_HYDRO_POSSIBLE` for a river or mountains (civ2-world's `lib/hydro`).
 
 const around = (city: City): Tile[] => [
   city.tile(),
@@ -31,15 +30,11 @@ export const hasOceanAccess = (city: City): boolean =>
       tile.getNeighbours().some((other: Tile): boolean => other.isWater())
   );
 
-/** A river or mountains on the city's square or next to it: a Hydro Plant needs one. */
+/**
+ * A river or mountains on the city's square or next to it: a Hydro Plant needs one (civ2-world's `hydroPossible`). Civ2
+ *  decides it once, when the city is founded; this asks the map as it is now.
+ */
 export const isHydroSite = (
   city: City,
   terrainFeatureRegistry: TerrainFeatureRegistry = terrainFeatureRegistryInstance
-): boolean =>
-  around(city).some(
-    (tile: Tile): boolean =>
-      tile.terrain() instanceof Mountains ||
-      terrainFeatureRegistry
-        .getByTerrain(tile.terrain())
-        .some((feature) => feature instanceof River)
-  );
+): boolean => hydroPossible(city.tile(), terrainFeatureRegistry);

@@ -38,6 +38,14 @@ export const getRules = (dependencies: Registries = {}): YieldModifier[] => {
     new YieldModifier(
       'civ2-city-improvement:city/yield-modifier/science',
       new Low(),
+      new Criterion(
+        (city: City, yields: Yield[], base: Yield[]): boolean =>
+          scienceBonus(
+            city,
+            Math.max(reduceYield(base, Research), 0),
+            registries
+          ) > 0
+      ),
       new Effect(
         (city: City, yields: Yield[], base: Yield[]): Yield =>
           new Research(
@@ -54,6 +62,14 @@ export const getRules = (dependencies: Registries = {}): YieldModifier[] => {
     new YieldModifier(
       'civ2-city-improvement:city/yield-modifier/production',
       new Low(),
+      new Criterion(
+        (city: City, yields: Yield[], base: Yield[]): boolean =>
+          productionBonus(
+            city,
+            Math.max(reduceYield(base, Production), 0),
+            registries
+          ) > 0
+      ),
       new Effect(
         (city: City, yields: Yield[], base: Yield[]): Yield =>
           new Production(

@@ -53,7 +53,7 @@ export interface PollutionDependencies extends Registries {
 }
 
 // Each turn a person's city with pollution (`lib/pollution`) may pollute one of the squares around it; as Civ2, no
-//  computer player's city does (OpenCiv2 `city_process`, which calls `city_process_pollution` only for a human player,
+//  computer player's city does (OpenCiv2 `city_process_turn`, which calls `city_process_pollution` only for a human player,
 //  richardpenman/civ2@49f26ec). Once a turn: the consolidated shields are processed once a city.
 export const getRules = (
   dependencies: PollutionDependencies = {}

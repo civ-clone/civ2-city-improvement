@@ -15,6 +15,8 @@ import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 import { Gold } from '../Yields';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
 import captured from '../Rules/City/captured';
+import Engine from '@civ-clone/core-engine/Engine';
+import improvementCreated from '../Rules/CityImprovement/created';
 import { expect } from 'chai';
 import { palaceEscape } from '../lib/capital';
 
@@ -28,11 +30,13 @@ const world = ({
   gold = 1500,
   cities = 12,
   human = false,
+  capturedSize = 10,
 }: {
   level?: number;
   gold?: number;
   cities?: number;
   human?: boolean;
+  capturedSize?: number;
 } = {}) => {
   const r = registries(),
     sizes = new Map<City, number>(),
@@ -44,12 +48,15 @@ const world = ({
       subtract: (n: number) => (gold -= n),
     };
 
-  sizes.set(captive, 10);
+  sizes.set(captive, capturedSize);
 
   for (let i = 1; i <= cities; i++) {
     const city = cityOf('loser', { tile: () => tile(i) });
 
-    sizes.set(city, i === 3 ? 12 : i === 5 ? 9 : 4);
+    sizes.set(
+      city,
+      i === 3 ? 12 : i === 5 ? 9 : i === 1 ? 7 : i === 10 ? 8 : 4
+    );
     others.push(city);
   }
 
@@ -102,6 +109,33 @@ describe('lib/capital: palaceEscape', (): void => {
 
     expect(palaceEscape(rich.captive, 'loser' as any, rich.dependencies)).not
       .null;
+  });
+});
+
+describe('city:captured, the Palace escape', (): void => {
+  it("pays 1000 gold and builds the computer player's Palace in its best city, and the captured city loses its own", (): void => {
+    const { captive, dependencies, gold, others, r } = world(),
+      ruleRegistry = new RuleRegistry(),
+      palace = built(Palace, captive);
+
+    r.cityImprovementRegistry.register(palace);
+    ruleRegistry.register(
+      ...improvementCreated(r.cityImprovementRegistry, new Engine()),
+      ...captured({ ...dependencies, ruleRegistry }, () => 0.9)
+    );
+    ruleRegistry.process(
+      Captured,
+      captive,
+      'taker' as any,
+      'loser' as any,
+      null
+    );
+
+    expect(palace.destroyed()).true;
+    expect(
+      r.cityImprovementRegistry.getByType(Palace).map((p) => p.city())
+    ).eql([others[2]]);
+    expect(gold()).equal(500);
   });
 });
 

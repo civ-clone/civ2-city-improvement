@@ -17,8 +17,8 @@ const getRules = (dependencies = {}) => {
         ...[Yields_1.Luxuries, Yields_1.Gold].map((YieldType) => new YieldModifier_1.default(`civ2-city-improvement:city/yield-modifier/market/${YieldType.name}`, new Low_1.default(), new Criterion_1.default((city) => (0, bonus_1.marketLevel)(city, registries) > 0), new Effect_1.default((city, yields, base) => new YieldType((Math.max((0, reduceYields_1.reduceYield)(base, YieldType), 0) *
             (0, bonus_1.marketLevel)(city, registries)) >>
             1, 'market')))),
-        new YieldModifier_1.default('civ2-city-improvement:city/yield-modifier/science', new Low_1.default(), new Effect_1.default((city, yields, base) => new Yields_1.Research((0, bonus_1.scienceBonus)(city, Math.max((0, reduceYields_1.reduceYield)(base, Yields_1.Research), 0), registries), 'science'))),
-        new YieldModifier_1.default('civ2-city-improvement:city/yield-modifier/production', new Low_1.default(), new Effect_1.default((city, yields, base) => new Yields_1.Production((0, bonus_1.productionBonus)(city, Math.max((0, reduceYields_1.reduceYield)(base, Yields_1.Production), 0), registries), 'factory'))),
+        new YieldModifier_1.default('civ2-city-improvement:city/yield-modifier/science', new Low_1.default(), new Criterion_1.default((city, yields, base) => (0, bonus_1.scienceBonus)(city, Math.max((0, reduceYields_1.reduceYield)(base, Yields_1.Research), 0), registries) > 0), new Effect_1.default((city, yields, base) => new Yields_1.Research((0, bonus_1.scienceBonus)(city, Math.max((0, reduceYields_1.reduceYield)(base, Yields_1.Research), 0), registries), 'science'))),
+        new YieldModifier_1.default('civ2-city-improvement:city/yield-modifier/production', new Low_1.default(), new Criterion_1.default((city, yields, base) => (0, bonus_1.productionBonus)(city, Math.max((0, reduceYields_1.reduceYield)(base, Yields_1.Production), 0), registries) > 0), new Effect_1.default((city, yields, base) => new Yields_1.Production((0, bonus_1.productionBonus)(city, Math.max((0, reduceYields_1.reduceYield)(base, Yields_1.Production), 0), registries), 'factory'))),
     ];
 };
 exports.getRules = getRules;

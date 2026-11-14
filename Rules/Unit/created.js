@@ -16,7 +16,7 @@ const Naval_1 = require("@civ-clone/base-unit-type-naval/Naval");
 const SingleUse_1 = require("@civ-clone/base-unit-trait-single-use/SingleUse");
 const Veteran_1 = require("@civ-clone/base-unit-improvement-veteran/UnitImprovements/Veteran");
 const roleOf_1 = require("@civ-clone/base-unit-role/roleOf");
-// A unit built in a city is a veteran (OpenCiv2 `src/auto/city_production.cpp` `city_complete_unit`,
+// A unit built in a city is a veteran (OpenCiv2 `src/auto/city_production.cpp` `city_process_production_unit`,
 //  richardpenman/civ2@49f26ec): a land unit with Barracks (or Sun Tzu's), unless its role is diplomacy or trade; a ship
 //  with a Port Facility (or the Lighthouse); an aircraft with an Airport; never a missile (`SingleUse`).
 const getRules = (unitImprovementRegistry = UnitImprovementRegistry_1.instance, ruleRegistry = RuleRegistry_1.instance, registries = {}) => [

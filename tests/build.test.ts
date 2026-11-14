@@ -7,6 +7,9 @@ import { Build } from '@civ-clone/core-city-build/Rules/Build';
 import { River } from '@civ-clone/civ2-world/TerrainFeatures';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
 import build from '../Rules/City/build';
+import { Electricity } from '@civ-clone/civ2-science/Advances';
+import { Requirement } from '@civ-clone/core-requirement/Requirement';
+import { hasEither } from '../lib/source';
 import { expect } from 'chai';
 import improvements from '../data/improvements';
 
@@ -18,7 +21,7 @@ const square = (terrain: unknown, neighbours: unknown[] = []) => ({
 
 describe('lib/site', (): void => {
   const land = {},
-    lake = square(new Ocean()),
+    lake = square(new Ocean(), [square(land)]),
     sea = square(new Ocean(), [square(new Ocean())]),
     at = (neighbours: unknown[]) =>
       cityOf('p', {
@@ -124,6 +127,26 @@ describe('city:build', (): void => {
       built(I.University, city)
     );
     expect(allows(I.ResearchLab)).true;
+  });
+
+  it('ignores an obsolete Wonder', (): void => {
+    const { allows, r } = setUp();
+
+    r.wonders.push(built(Pyramids, cityOf()));
+    r.requirementRegistry.add(
+      null,
+      new Requirement({
+        id: 'test:obsolete',
+        subject: Pyramids,
+        relation: 'obsoletedBy',
+        targets: [Electricity],
+        range: 'world',
+      })
+    );
+    (r.playerResearchRegistry as any).some = () => true;
+
+    expect(allows(I.Granary)).true;
+    expect(hasEither(cityOf(), I.Granary, Pyramids, r)).false;
   });
 
   it('builds a Harbour only on the coast', (): void => {

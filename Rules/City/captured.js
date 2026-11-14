@@ -43,7 +43,7 @@ const getRules = (dependencies = {}, randomNumberGenerator = core_random_1.insta
             standing(city)
                 .filter((improvement) => exports.lostOnCapture.some((Lost) => improvement instanceof Lost))
                 .forEach((improvement) => improvement.destroy());
-            // `0xaa >> (rand & 1)`: odd rows are kept, or even ones.
+            // One roll decides whether the odd rows are kept or the even ones.
             const keepOdd = randomNumberGenerator() < 0.5;
             standing(city)
                 .filter((improvement) => {

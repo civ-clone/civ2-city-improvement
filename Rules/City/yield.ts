@@ -3,6 +3,7 @@ import {
   Courthouse,
   Harbour,
   OffshorePlatform,
+  Palace,
   Superhighways,
 } from '../../CityImprovements';
 import {
@@ -56,10 +57,16 @@ export const getRules = (dependencies: YieldDependencies = {}): YieldRule[] => {
     } = dependencies,
     has = (city: City, Improvement: typeof CityImprovement): boolean =>
       improvementOf(city, Improvement, registries.cityImprovementRegistry) !==
-      null;
+      null,
+    tithes = (city: City): number =>
+      contents.reduce(
+        (total: number, content): number =>
+          total + (content(city, registries)?.value ?? 0),
+        0
+      );
 
   return [
-    // OpenCiv2 `city_calc_tile_yield` (richardpenman/civ2@49f26ec): a Harbour adds 1 food to each ocean square the city
+    // OpenCiv2 `city_tile_yield` (richardpenman/civ2@49f26ec): a Harbour adds 1 food to each ocean square the city
     //  works, an Offshore Platform 1 shield.
     ...(
       [
@@ -80,7 +87,7 @@ export const getRules = (dependencies: YieldDependencies = {}): YieldRule[] => {
         )
     ),
 
-    // `city_calc_tile_yield`: Superhighways add half the trade (rounded down) of each square with a road (or the city).
+    // `city_tile_yield`: Superhighways add half the trade (rounded down) of each square with a road (or the city).
     new YieldRule(
       `civ2-city-improvement:city/yield/${Superhighways.name}`,
       new Priority(SQUARES),
@@ -111,12 +118,14 @@ export const getRules = (dependencies: YieldDependencies = {}): YieldRule[] => {
       )
     ),
 
-    // `city_calc_corruption`: a Courthouse halves the city's corruption (the Palace's halving is civ2-city's; a city
-    //  can't have both), rounding what's left down.
+    // `city_calc_corruption`: a Courthouse or the Palace halves the city's corruption, once, rounding what's left down.
+    //  The Palace's halving is civ2-city's, so a Courthouse in the Palace's city (a capital moved or rebuilt there) adds
+    //  nothing.
     new YieldRule(
       COURTHOUSE_RULE,
       new Priority(COURTHOUSE),
       new Criterion((city: City): boolean => has(city, Courthouse)),
+      new Criterion((city: City): boolean => !has(city, Palace)),
       new Criterion(
         (city: City, yields: Yield[]): boolean =>
           reduceYield(yields, Corruption) < 0
@@ -141,17 +150,8 @@ export const getRules = (dependencies: YieldDependencies = {}): YieldRule[] => {
           governmentOf(city.player(), playerGovernmentRegistry) ===
           FUNDAMENTALISM
       ),
-      new Effect(
-        (city: City): Yield =>
-          new Gold(
-            contents.reduce(
-              (total: number, content): number =>
-                total + (content(city, registries)?.value ?? 0),
-              0
-            ),
-            'tithes'
-          )
-      )
+      new Criterion((city: City): boolean => tithes(city) > 0),
+      new Effect((city: City): Yield => new Gold(tithes(city), 'tithes'))
     ),
   ];
 };

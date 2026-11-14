@@ -24,7 +24,7 @@ import Veteran from '@civ-clone/base-unit-improvement-veteran/UnitImprovements/V
 import Wonder from '@civ-clone/core-wonder/Wonder';
 import { hasRole } from '@civ-clone/base-unit-role/roleOf';
 
-// A unit built in a city is a veteran (OpenCiv2 `src/auto/city_production.cpp` `city_complete_unit`,
+// A unit built in a city is a veteran (OpenCiv2 `src/auto/city_production.cpp` `city_process_production_unit`,
 //  richardpenman/civ2@49f26ec): a land unit with Barracks (or Sun Tzu's), unless its role is diplomacy or trade; a ship
 //  with a Port Facility (or the Lighthouse); an aircraft with an Airport; never a missile (`SingleUse`).
 export const getRules = (

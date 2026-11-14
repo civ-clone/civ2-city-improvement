@@ -35,6 +35,14 @@ describe('register', (): void => {
   });
 
   it('loads no civ1-* or library-* module', (): void => {
+    // The pattern catches one (a positive control), in either layout.
+    [
+      '/node_modules/@civ-clone/civ1-city/index.js',
+      '/node_modules/.pnpm/@civ-clone+library-city@0.1.0/index.js',
+    ].forEach(
+      (path) => expect(/@civ-clone[\\/+](civ1|library)-/.test(path)).true
+    );
+    expect(Object.keys(require.cache).length).greaterThan(100);
     expect(
       Object.keys(require.cache).filter((path) =>
         /@civ-clone[\\/+](civ1|library)-/.test(path)
