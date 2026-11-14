@@ -38,53 +38,74 @@ export const freeUnderFundamentalism: (typeof CityImprovement)[] = [
 ];
 
 /**
- * What `Improvement` costs `player` in gold a turn (OpenCiv2 `src/auto/civ.cpp` `civ_improvement_upkeep`,
+ * What each improvement costs `player` in gold a turn (OpenCiv2 `src/auto/civ.cpp` `civ_improvement_upkeep`,
  *  richardpenman/civ2@49f26ec): its @IMPROVE upkeep; Barracks 1 less below Prince, 1 more with Gunpowder and 1 more
  *  with Mobile Warfare; nothing for an upkeep of 1 with Adam Smith's; and nothing for a Temple, Colosseum or Cathedral
- *  under Fundamentalism.
+ *  under Fundamentalism. The player's research, Wonders and government are each asked at most once, on first need, so
+ *  one city's improvements can share the answer.
  */
-export const upkeep = (
-  Improvement: typeof CityImprovement,
+export const upkeepFor = (
   player: Player,
   {
     gameDifficultyRegistry = gameDifficultyRegistryInstance,
     playerGovernmentRegistry = playerGovernmentRegistryInstance,
     ...registries
   }: UpkeepDependencies = {}
-): number => {
-  let cost = rowUpkeep.get(Improvement) ?? 0;
+): ((Improvement: typeof CityImprovement) => number) => {
+  let adamSmith: boolean | null = null,
+    fundamentalism: boolean | null = null;
 
-  if (Improvement === Barracks) {
-    const research =
-      withDefaults(registries).playerResearchRegistry.getByPlayer(player);
+  return (Improvement: typeof CityImprovement): number => {
+    let cost = rowUpkeep.get(Improvement) ?? 0;
 
-    if (levelOf(gameDifficultyRegistry) < barracksPrinceLevel && cost !== 0) {
-      cost--;
+    if (Improvement === Barracks) {
+      const research =
+        withDefaults(registries).playerResearchRegistry.getByPlayer(player);
+
+      if (levelOf(gameDifficultyRegistry) < barracksPrinceLevel && cost !== 0) {
+        cost--;
+      }
+
+      if (research.completed(Gunpowder)) {
+        cost++;
+      }
+
+      if (research.completed(MobileWarfare)) {
+        cost++;
+      }
     }
 
-    if (research.completed(Gunpowder)) {
-      cost++;
+    if (cost === 1) {
+      if (adamSmith === null) {
+        adamSmith = owns(player, AdamSmithsTradingCompany, registries);
+      }
+
+      if (adamSmith) {
+        cost = 0;
+      }
     }
 
-    if (research.completed(MobileWarfare)) {
-      cost++;
+    if (cost !== 0 && freeUnderFundamentalism.includes(Improvement)) {
+      if (fundamentalism === null) {
+        fundamentalism =
+          governmentOf(player, playerGovernmentRegistry) === FUNDAMENTALISM;
+      }
+
+      if (fundamentalism) {
+        cost = 0;
+      }
     }
-  }
 
-  if (cost === 1 && owns(player, AdamSmithsTradingCompany, registries)) {
-    cost = 0;
-  }
-
-  if (
-    cost !== 0 &&
-    freeUnderFundamentalism.includes(Improvement) &&
-    governmentOf(player, playerGovernmentRegistry) === FUNDAMENTALISM
-  ) {
-    cost = 0;
-  }
-
-  return cost;
+    return cost;
+  };
 };
+
+/** What `Improvement` costs `player` in gold a turn (`upkeepFor`). */
+export const upkeep = (
+  Improvement: typeof CityImprovement,
+  player: Player,
+  dependencies: UpkeepDependencies = {}
+): number => upkeepFor(player, dependencies)(Improvement);
 
 /** Whether `player`'s cities pay upkeep at all: not under Anarchy (OpenCiv2 `city_pay_improvement_upkeep`). */
 export const paysUpkeep = (

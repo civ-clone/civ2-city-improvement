@@ -27,7 +27,7 @@ const ocean = (city) => city
     .filter((tile) => tile.terrain() instanceof Terrains_1.Ocean);
 const getRules = (dependencies = {}) => {
     const registries = (0, source_1.withDefaults)(dependencies), { playerGovernmentRegistry = PlayerGovernmentRegistry_1.instance, tileImprovementRegistry = TileImprovementRegistry_1.instance, } = dependencies, has = (city, Improvement) => (0, has_1.improvementOf)(city, Improvement, registries.cityImprovementRegistry) !==
-        null, tithes = (city) => content_1.contents.reduce((total, content) => { var _a, _b; return total + ((_b = (_a = content(city, registries)) === null || _a === void 0 ? void 0 : _a.value) !== null && _b !== void 0 ? _b : 0); }, 0);
+        null, tithes = (city) => (0, content_1.tithes)(city, registries);
     return [
         // OpenCiv2 `city_tile_yield` (richardpenman/civ2@49f26ec): a Harbour adds 1 food to each ocean square the city
         //  works, an Offshore Platform 1 shield.
@@ -51,7 +51,7 @@ const getRules = (dependencies = {}) => {
         new Yield_1.default(RuleIds_1.COURTHOUSE_RULE, new Priority_1.default(COURTHOUSE), new Criterion_1.default((city) => has(city, CityImprovements_1.Courthouse)), new Criterion_1.default((city) => !has(city, CityImprovements_1.Palace)), new Criterion_1.default((city, yields) => (0, reduceYields_1.reduceYield)(yields, Yields_1.Corruption) < 0), new Effect_1.default((city, yields) => 
         // Corruption is a negative yield: a negative value given back to it takes from what's lost.
         new Yields_1.Corruption(Math.floor((0, reduceYields_1.reduceYield)(yields, Yields_1.Corruption) / 2), CityImprovements_1.Courthouse.name))),
-        // `city_split_trade`: under Fundamentalism the improvements' content citizens are paid as tithes, in gold, before
+        // `city_split_trade`: under Fundamentalism the improvements' content citizens (and J. S. Bach's) are paid as tithes, in gold, before
         //  the Marketplace's bonus.
         new Yield_1.default('civ2-city-improvement:city/yield/tithes', new Priority_1.default(TITHES), new Criterion_1.default((city) => (0, government_1.default)(city.player(), playerGovernmentRegistry) ===
             governments_1.FUNDAMENTALISM), new Criterion_1.default((city) => tithes(city) > 0), new Effect_1.default((city) => new Yields_1.Gold(tithes(city), 'tithes'))),

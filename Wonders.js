@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WomensSuffrage = exports.SunTzusWarAcademy = exports.SetiProgram = exports.Pyramids = exports.Oracle = exports.MichelangelosChapel = exports.Lighthouse = exports.IsaacNewtonsCollege = exports.HooverDam = exports.GreatWall = exports.AdamSmithsTradingCompany = void 0;
+exports.WomensSuffrage = exports.SunTzusWarAcademy = exports.SetiProgram = exports.Pyramids = exports.Oracle = exports.MichelangelosChapel = exports.Lighthouse = exports.IsaacNewtonsCollege = exports.JsBachsCathedral = exports.HooverDam = exports.GreatWall = exports.AdamSmithsTradingCompany = void 0;
 // The Wonders whose effect Civilization II tests together with an improvement's (OpenCiv2 writes "improvement or
 //  Wonder" as one condition): this package owns those sites, through base-wonder's `cityHasImprovementOrWonder`, so the
 //  two never stack. civ2-wonder registers the Wonders and their Wonder-only effects.
@@ -10,6 +10,8 @@ var GreatWall_1 = require("@civ-clone/base-wonder-great-wall/GreatWall");
 Object.defineProperty(exports, "GreatWall", { enumerable: true, get: function () { return GreatWall_1.GreatWall; } });
 var HooverDam_1 = require("@civ-clone/base-wonder-hooverdam/HooverDam");
 Object.defineProperty(exports, "HooverDam", { enumerable: true, get: function () { return HooverDam_1.HooverDam; } });
+var JsBachsCathedral_1 = require("@civ-clone/base-wonder-jsbachscathedral/JsBachsCathedral");
+Object.defineProperty(exports, "JsBachsCathedral", { enumerable: true, get: function () { return JsBachsCathedral_1.JsBachsCathedral; } });
 var IsaacNewtonsCollege_1 = require("@civ-clone/base-wonder-isaacnewtonscollege/IsaacNewtonsCollege");
 Object.defineProperty(exports, "IsaacNewtonsCollege", { enumerable: true, get: function () { return IsaacNewtonsCollege_1.IsaacNewtonsCollege; } });
 var Lighthouse_1 = require("@civ-clone/base-wonder-lighthouse/Lighthouse");

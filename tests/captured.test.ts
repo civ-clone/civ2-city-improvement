@@ -15,6 +15,7 @@ import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 import { Gold } from '../Yields';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
 import captured from '../Rules/City/captured';
+import InciteRevolt from '@civ-clone/base-unit-action-incite-revolt/InciteRevolt';
 import Engine from '@civ-clone/core-engine/Engine';
 import improvementCreated from '../Rules/CityImprovement/created';
 import { expect } from 'chai';
@@ -140,7 +141,7 @@ describe('city:captured, the Palace escape', (): void => {
 });
 
 describe('city:captured', (): void => {
-  const capture = (founder: unknown, roll: number) => {
+  const capture = (founder: unknown, roll: number, cause: unknown = null) => {
     const r = registries(),
       ruleRegistry = new RuleRegistry(),
       city = cityOf('taker', { originalPlayer: () => founder }),
@@ -166,7 +167,7 @@ describe('city:captured', (): void => {
         () => roll
       )
     );
-    ruleRegistry.process(Captured, city, 'taker' as any, 'loser' as any, null);
+    ruleRegistry.process(Captured, city, 'taker' as any, 'loser' as any, cause);
 
     return r.cityImprovementRegistry
       .getByCity(city)
@@ -177,6 +178,15 @@ describe('city:captured', (): void => {
     // Rows: Barracks 2, Granary 3, Aqueduct 9, Library 6.
     expect(capture('someone', 0.1)).eql(['Granary', 'Aqueduct']);
     expect(capture('someone', 0.9)).eql(['Barracks', 'Library']);
+  });
+
+  it('incited, it loses the Palace, Temple and Courthouse, but nothing to the roll', (): void => {
+    expect(capture('someone', 0.1, Object.create(InciteRevolt.prototype))).eql([
+      'Barracks',
+      'Granary',
+      'Aqueduct',
+      'Library',
+    ]);
   });
 
   it('retaken by its founder, it loses only the Palace', (): void => {

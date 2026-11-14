@@ -29,3 +29,8 @@ export declare const contents: ((
   city: City,
   registries?: Registries
 ) => Content | null)[];
+/**
+ * Fundamentalism's tithes (`city_split_trade`): the content the city's improvements make, before the unhappy cap, and
+ *  J. S. Bach's 2 for its owner. Bach's content itself is civ2-wonder's.
+ */
+export declare const tithes: (city: City, registries?: Registries) => number;

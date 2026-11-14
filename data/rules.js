@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sdiMissileAttackBelow = exports.cityDefenceMultiplier = exports.palaceEscapeGold = exports.palaceEscapeCities = exports.palaceEscapeAboveLevel = exports.palaceEscapeMinimumSize = exports.palaceEscapeCost = exports.barracksPrinceLevel = exports.pollutionRollCeiling = exports.populationPollutionDivisor = exports.pollutionTolerance = exports.plantQuarters = exports.manufacturingPlantQuarters = exports.factoryQuarters = exports.bonusHalvesPerLevel = exports.cathedralContent = exports.colosseumContent = exports.sewerSize = exports.aqueductSize = exports.granaryRowsPerCitizen = void 0;
+exports.bachContent = exports.sdiMissileAttackBelow = exports.cityDefenceMultiplier = exports.palaceEscapeGold = exports.palaceEscapeCities = exports.palaceEscapeAboveLevel = exports.palaceEscapeMinimumSize = exports.palaceEscapeCost = exports.barracksPrinceLevel = exports.pollutionRollCeiling = exports.populationPollutionDivisor = exports.pollutionTolerance = exports.plantQuarters = exports.manufacturingPlantQuarters = exports.factoryQuarters = exports.cathedralContent = exports.colosseumContent = exports.sewerSize = exports.aqueductSize = exports.granaryRowsPerCitizen = void 0;
 // Civilization II's city improvement numbers besides @IMPROVE's, each with the OpenCiv2 function it comes from
 //  (richardpenman/civ2@49f26ec). Numbers only.
 const cosmic_1 = require("@civ-clone/civ2-rules/data/cosmic");
@@ -13,8 +13,6 @@ exports.sewerSize = cosmic_1.default.sewerSize;
 exports.colosseumContent = 3;
 /** `city_calc_trade_happiness` stage 2: a Cathedral's (or Michelangelo's) content citizens with Theology, one fewer without. */
 exports.cathedralContent = 3;
-/** `city_split_trade`: each of Marketplace, Bank and Stock Exchange (Library, University, Research Lab) adds half the base. */
-exports.bonusHalvesPerLevel = 1;
 /** `city_calc_shields_pollution`: a Factory and a Manufacturing Plant each add 2/4 of the shields; a plant 2/4 more, no more than they do. */
 exports.factoryQuarters = 2;
 exports.manufacturingPlantQuarters = 2;
@@ -36,4 +34,6 @@ exports.palaceEscapeGold = 1999;
 exports.cityDefenceMultiplier = 2;
 /** `unit_resolve_attack_city_defenses`: the SDI Defense doubles against a missile with an attack below 99 (not a nuke). */
 exports.sdiMissileAttackBelow = 99;
+/** `city_split_trade`: J. S. Bach's Cathedral's content citizens, counted in Fundamentalism's tithes. */
+exports.bachContent = 2;
 //# sourceMappingURL=rules.js.map

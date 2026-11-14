@@ -7,8 +7,6 @@ export declare const sewerSize: number;
 export declare const colosseumContent = 3;
 /** `city_calc_trade_happiness` stage 2: a Cathedral's (or Michelangelo's) content citizens with Theology, one fewer without. */
 export declare const cathedralContent = 3;
-/** `city_split_trade`: each of Marketplace, Bank and Stock Exchange (Library, University, Research Lab) adds half the base. */
-export declare const bonusHalvesPerLevel = 1;
 /** `city_calc_shields_pollution`: a Factory and a Manufacturing Plant each add 2/4 of the shields; a plant 2/4 more, no more than they do. */
 export declare const factoryQuarters = 2;
 export declare const manufacturingPlantQuarters = 2;
@@ -30,3 +28,5 @@ export declare const palaceEscapeGold = 1999;
 export declare const cityDefenceMultiplier = 2;
 /** `unit_resolve_attack_city_defenses`: the SDI Defense doubles against a missile with an attack below 99 (not a nuke). */
 export declare const sdiMissileAttackBelow = 99;
+/** `city_split_trade`: J. S. Bach's Cathedral's content citizens, counted in Fundamentalism's tithes. */
+export declare const bachContent = 2;

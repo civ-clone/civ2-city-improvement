@@ -4,6 +4,7 @@
 export { AdamSmithsTradingCompany } from '@civ-clone/base-wonder-adamsmithstradingcompany/AdamSmithsTradingCompany';
 export { GreatWall } from '@civ-clone/base-wonder-great-wall/GreatWall';
 export { HooverDam } from '@civ-clone/base-wonder-hooverdam/HooverDam';
+export { JsBachsCathedral } from '@civ-clone/base-wonder-jsbachscathedral/JsBachsCathedral';
 export { IsaacNewtonsCollege } from '@civ-clone/base-wonder-isaacnewtonscollege/IsaacNewtonsCollege';
 export { Lighthouse } from '@civ-clone/base-wonder-lighthouse/Lighthouse';
 export { MichelangelosChapel } from '@civ-clone/base-wonder-michelangeloschapel/MichelangelosChapel';

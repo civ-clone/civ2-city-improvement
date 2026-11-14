@@ -80,22 +80,28 @@ export const productionBonus = (
   registries: Registries = {}
 ): number => {
   const factory =
-      (hasEither(city, Factory, null, registries) ? factoryQuarters : 0) +
-      (hasEither(city, ManufacturingPlant, null, registries)
-        ? manufacturingPlantQuarters
-        : 0),
-    plant = (
-      [
-        [PowerPlant, null],
-        [HydroPlant, HooverDam],
-        [NuclearPlant, null],
-        [SolarPlant, null],
-      ] as [typeof CityImprovement, typeof Wonder | null][]
-    ).some(([Improvement, WonderType]) =>
-      hasEither(city, Improvement, WonderType, registries)
-    )
-      ? plantQuarters
-      : 0;
+    (hasEither(city, Factory, null, registries) ? factoryQuarters : 0) +
+    (hasEither(city, ManufacturingPlant, null, registries)
+      ? manufacturingPlantQuarters
+      : 0);
+
+  // No plant counts without a factory, so the plants aren't asked about then.
+  if (factory === 0 || shields === 0) {
+    return 0;
+  }
+
+  const plant = (
+    [
+      [PowerPlant, null],
+      [HydroPlant, HooverDam],
+      [NuclearPlant, null],
+      [SolarPlant, null],
+    ] as [typeof CityImprovement, typeof Wonder | null][]
+  ).some(([Improvement, WonderType]) =>
+    hasEither(city, Improvement, WonderType, registries)
+  )
+    ? plantQuarters
+    : 0;
 
   return (
     ((shields * factory) >> 2) + ((shields * Math.min(plant, factory)) >> 2)

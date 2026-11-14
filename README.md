@@ -25,7 +25,7 @@ citing its function. Other numbers are in `data/rules.ts`.
   leaves half a box after growth.
 - **Content** (`lib/content`): a Colosseum, a Cathedral (or Michelangelo's) and a Temple (doubled by the Oracle), with
   Civ2's advance steps; under Democracy a Courthouse or the Palace makes a citizen happy; under Fundamentalism their
-  content is paid as tithes.
+  content, and J. S. Bach's 2, are paid as tithes.
 - **The Courthouse** halves corruption before the trade is split (`Rules/City/yield`).
 - **Multipliers** (`lib/bonus`): Marketplace, Bank and Stock Exchange, and Library, University and Research Lab (or
   SETI; all of it in Newton's city), each half the base, never compounding; Factory, Manufacturing Plant and plants (or
@@ -48,5 +48,12 @@ citing its function. Other numbers are in `data/rules.ts`.
 - **Capture:** a city retaken by its founder loses its Palace too (Civ2 leaves the bit, giving the founder a second);
   the escape's land-mass halving and spaceship condition aren't modelled, and a person is never offered the escape.
 - **Nuclear Plant meltdowns** in disorder aren't modelled.
+- **Communism's veteran Diplomats** (`city_process_production_unit`) aren't modelled.
+- **Superhighways** read each square's `yields()` and count only a Road (or the city's square), not a Railroad alone.
+- **The Palace escape** counts the loser's cities and the captured city's size after civ2-city's capture rules have run
+  (Civ2 counts before), and measures distance by the world's own metric rather than Civ2's diagonal one, so it can be
+  one off at its thresholds.
+- **The founder** is the city's original player, as civ2-city has it; Civ2 makes the loser the founder after each
+  capture, so a city taken back and forth loses differently.
 - **A computer player's late refounding** with free improvements isn't modelled.
 - **Shield waste**, and the computer players' shield rows by level, are civ2-city's and civ2-difficulty's.

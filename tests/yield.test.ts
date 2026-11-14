@@ -22,7 +22,12 @@ import {
   Research,
   Trade,
 } from '../Yields';
-import { HooverDam, IsaacNewtonsCollege, SetiProgram } from '../Wonders';
+import {
+  HooverDam,
+  IsaacNewtonsCollege,
+  JsBachsCathedral,
+  SetiProgram,
+} from '../Wonders';
 import { built, cityOf, governedBy, registries } from './lib/stubs';
 import City from '@civ-clone/core-city/City';
 import Criterion from '@civ-clone/core-rule/Criterion';
@@ -231,5 +236,9 @@ describe('city:yield, squares and tithes', (): void => {
     );
     // The Temple's 2 content as 2 gold, and half of that again for the Marketplace.
     expect(total(Gold)).equal(3);
+
+    // J. S. Bach's 2 are tithes too: 4, and half again.
+    r.wonders.push(built(JsBachsCathedral, cityOf()));
+    expect(total(Gold)).equal(6);
   });
 });

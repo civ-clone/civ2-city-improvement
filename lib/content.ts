@@ -7,9 +7,9 @@ import {
   Mysticism,
   Theology,
 } from '@civ-clone/civ2-science/Advances';
-import { MichelangelosChapel, Oracle } from '../Wonders';
+import { JsBachsCathedral, MichelangelosChapel, Oracle } from '../Wonders';
 import { Registries, owns, sourceOf, withDefaults } from './source';
-import { cathedralContent, colosseumContent } from '../data/rules';
+import { bachContent, cathedralContent, colosseumContent } from '../data/rules';
 import City from '@civ-clone/core-city/City';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 
@@ -85,3 +85,14 @@ export const temple = (
 };
 
 export const contents = [colosseum, cathedral, temple];
+
+/**
+ * Fundamentalism's tithes (`city_split_trade`): the content the city's improvements make, before the unhappy cap, and
+ *  J. S. Bach's 2 for its owner. Bach's content itself is civ2-wonder's.
+ */
+export const tithes = (city: City, registries: Registries = {}): number =>
+  contents.reduce(
+    (total: number, content): number =>
+      total + (content(city, registries)?.value ?? 0),
+    0
+  ) + (owns(city.player(), JsBachsCathedral, registries) ? bachContent : 0);

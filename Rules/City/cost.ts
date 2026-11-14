@@ -18,7 +18,7 @@ import {
   instance as playerGovernmentRegistryInstance,
 } from '@civ-clone/core-government/PlayerGovernmentRegistry';
 import { Registries, withDefaults } from '../../lib/source';
-import { paysUpkeep, upkeep } from '../../lib/upkeep';
+import { paysUpkeep, upkeepFor } from '../../lib/upkeep';
 import City from '@civ-clone/core-city/City';
 import Cost from '@civ-clone/core-city/Rules/Cost';
 import Criterion from '@civ-clone/core-rule/Criterion';
@@ -26,12 +26,11 @@ import { DEMOCRACY } from '@civ-clone/civ2-rules/data/governments';
 import Effect from '@civ-clone/core-rule/Effect';
 import Low from '@civ-clone/core-rule/Priorities/Low';
 import Yield from '@civ-clone/core-yield/Yield';
-import { contents } from '../../lib/content';
+import { Content, contents } from '../../lib/content';
 import governmentOf from '@civ-clone/civ2-city/lib/government';
 import improvements from '../../data/improvements';
 import { improvementOf } from '@civ-clone/base-city-improvement-rules/lib/has';
 import isHuman from '@civ-clone/civ2-difficulty/isHuman';
-import maintenanceRules from '@civ-clone/base-city-improvement-rules/lib/maintenance';
 import { reduceYield } from '@civ-clone/core-yield/lib/reduceYields';
 
 export interface CostDependencies extends Registries {
@@ -40,6 +39,11 @@ export interface CostDependencies extends Registries {
   playerGovernmentRegistry?: PlayerGovernmentRegistry;
 }
 
+/** Each improvement's @IMPROVE row, the order Civ2 pays upkeep in (`city_pay_improvement_upkeep`). */
+const rowOf = new Map<Function, number>(
+  improvements.map(([Improvement], index) => [Improvement, index])
+);
+
 export const getRules = (dependencies: CostDependencies = {}): Cost[] => {
   const {
       clientRegistry = clientRegistryInstance,
@@ -47,70 +51,75 @@ export const getRules = (dependencies: CostDependencies = {}): Cost[] => {
       playerGovernmentRegistry = playerGovernmentRegistryInstance,
     } = dependencies,
     registries = withDefaults(dependencies),
-    upkeepOf =
-      (Improvement: Function) =>
-      (city: City): number =>
-        upkeep(Improvement as any, city.player(), {
-          ...registries,
-          gameDifficultyRegistry,
-          playerGovernmentRegistry,
-        });
+    upkeepDependencies = {
+      ...registries,
+      gameDifficultyRegistry,
+      playerGovernmentRegistry,
+    };
 
   return [
     // Upkeep (`lib/upkeep`), paid only by a person's cities and not under Anarchy (OpenCiv2
-    //  `city_pay_improvement_upkeep`, richardpenman/civ2@49f26ec), and only where it's more than nothing, so the
-    //  treasury's bankruptcy sale can't take an improvement that costs nothing (the Palace).
-    ...improvements.flatMap(([Improvement]) =>
-      maintenanceRules(
-        [
-          [
-            Improvement,
-            CityImprovementMaintenanceGold as any,
-            upkeepOf(Improvement),
-          ],
-        ],
-        { cityImprovementRegistry: registries.cityImprovementRegistry },
-        {
-          idPrefix: 'civ2-city-improvement',
-          criteria: [
-            new Criterion((city: City): boolean =>
-              isHuman(city.player(), clientRegistry)
-            ),
-            new Criterion((city: City): boolean =>
-              paysUpkeep(city.player(), playerGovernmentRegistry)
-            ),
-            new Criterion(
-              (city: City): boolean => upkeepOf(Improvement)(city) > 0
-            ),
-          ],
-        }
-      )
+    //  `city_pay_improvement_upkeep`, richardpenman/civ2@49f26ec), in @IMPROVE order, and only where it's more than
+    //  nothing, so the treasury's bankruptcy sale can't take an improvement that costs nothing (the Palace). One rule
+    //  that reads the city's improvements once.
+    new Cost(
+      'civ2-city-improvement:city/cost/maintenance',
+      new Criterion((city: City): boolean =>
+        isHuman(city.player(), clientRegistry)
+      ),
+      new Criterion((city: City): boolean =>
+        paysUpkeep(city.player(), playerGovernmentRegistry)
+      ),
+      new Effect((city: City): Yield[] => {
+        const costOf = upkeepFor(city.player(), upkeepDependencies);
+
+        return registries.cityImprovementRegistry
+          .getByCity(city)
+          .filter((improvement) => rowOf.has(improvement.constructor))
+          .sort((a, b) => rowOf.get(a.constructor)! - rowOf.get(b.constructor)!)
+          .flatMap((improvement): Yield[] => {
+            const cost = costOf(improvement.constructor as any);
+
+            return cost > 0
+              ? [new CityImprovementMaintenanceGold(cost, improvement)]
+              : [];
+          });
+      })
     ),
 
     // The content citizens of the city's improvements (`lib/content`), after the luxuries and before civ2-city-happiness's
     //  martial law (3500), as `Low`.
-    ...contents.map(
-      (content) =>
-        new Cost(
-          `civ2-city-improvement:city/cost/content/${content.name}`,
-          new Low(),
-          new Criterion(
-            (city: City): boolean => content(city, registries) !== null
-          ),
-          new Criterion(
-            (city: City, yields: Yield[]): boolean =>
-              reduceYield(yields, Unhappiness) > 0
-          ),
-          new Effect((city: City, yields: Yield[]): Yield => {
-            const { source, value } = content(city, registries)!;
+    ...contents.map((content) => {
+      // Worked out once a `yields()` call, for the criterion and the effect both.
+      const known = new WeakMap<Yield[], Content | null>(),
+        of = (city: City, yields: Yield[]): Content | null => {
+          if (!known.has(yields)) {
+            known.set(yields, content(city, registries));
+          }
 
-            return new CityImprovementContent(
-              Math.min(value, reduceYield(yields, Unhappiness)),
-              source
-            );
-          })
-        )
-    ),
+          return known.get(yields)!;
+        };
+
+      return new Cost(
+        `civ2-city-improvement:city/cost/content/${content.name}`,
+        new Low(),
+        new Criterion(
+          (city: City, yields: Yield[]): boolean => of(city, yields) !== null
+        ),
+        new Criterion(
+          (city: City, yields: Yield[]): boolean =>
+            reduceYield(yields, Unhappiness) > 0
+        ),
+        new Effect((city: City, yields: Yield[]): Yield => {
+          const { source, value } = of(city, yields)!;
+
+          return new CityImprovementContent(
+            Math.min(value, reduceYield(yields, Unhappiness)),
+            source
+          );
+        })
+      );
+    }),
 
     // Under Democracy a Courthouse, or the Palace, makes one content citizen happy.
     new Cost(

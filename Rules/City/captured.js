@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRules = exports.lostOnCapture = void 0;
 const capital_1 = require("../../lib/capital");
 const CityImprovements_1 = require("../../CityImprovements");
+const InciteRevolt_1 = require("@civ-clone/base-unit-action-incite-revolt/InciteRevolt");
 const Captured_1 = require("@civ-clone/core-city/Rules/Captured");
 const Criterion_1 = require("@civ-clone/core-rule/Criterion");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
@@ -23,8 +24,10 @@ const isFounder = (city, capturer) => city.originalPlayer() === capturer;
 //  - a computer player that loses its capital may buy the Palace into another city (`lib/capital`);
 //  - the Palace is lost (Civ2 leaves the bit on a city its founder retakes, which would give the founder a second
 //    capital: here it's always lost);
-//  - taken by anyone but its founder, the city loses its Temple, Cathedral and Courthouse, and then every improvement in
-//    an odd @IMPROVE row, or every one in an even row, on one roll. Wonders aren't improvements here.
+//  - taken by anyone but its founder, the city loses its Temple, Cathedral and Courthouse, and then, conquered rather
+//    than incited, every improvement in an odd @IMPROVE row, or every one in an even row, on one roll. Wonders aren't
+//    improvements here. The founder is the city's original player (as civ2-city has it); Civ2 makes the loser the
+//    founder after each capture.
 const getRules = (dependencies = {}, randomNumberGenerator = core_random_1.instance) => {
     const { cityImprovementRegistry } = (0, source_1.withDefaults)(dependencies), standing = (city) => cityImprovementRegistry
         .getByCity(city)
@@ -39,10 +42,14 @@ const getRules = (dependencies = {}, randomNumberGenerator = core_random_1.insta
         new Captured_1.default('civ2-city-improvement:city/captured/palace', new Effect_1.default((city) => standing(city)
             .filter((improvement) => improvement instanceof CityImprovements_1.Palace)
             .forEach((palace) => palace.destroy()))),
-        new Captured_1.default('civ2-city-improvement:city/captured/lost', new Criterion_1.default((city, capturer) => !isFounder(city, capturer)), new Effect_1.default((city) => {
+        new Captured_1.default('civ2-city-improvement:city/captured/lost', new Criterion_1.default((city, capturer) => !isFounder(city, capturer)), new Effect_1.default((city, capturer, loser, cause) => {
             standing(city)
                 .filter((improvement) => exports.lostOnCapture.some((Lost) => improvement instanceof Lost))
                 .forEach((improvement) => improvement.destroy());
+            // Only a conquest rolls: a city a Diplomat or Spy incites keeps the rest.
+            if (cause instanceof InciteRevolt_1.default) {
+                return;
+            }
             // One roll decides whether the odd rows are kept or the even ones.
             const keepOdd = randomNumberGenerator() < 0.5;
             standing(city)

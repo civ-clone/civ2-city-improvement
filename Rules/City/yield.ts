@@ -27,7 +27,7 @@ import { Road } from '@civ-clone/civ2-world/TileImprovements';
 import Tile from '@civ-clone/core-world/Tile';
 import Yield from '@civ-clone/core-yield/Yield';
 import YieldRule from '@civ-clone/core-city/Rules/Yield';
-import { contents } from '../../lib/content';
+import { tithes as cityTithes } from '../../lib/content';
 import governmentOf from '@civ-clone/civ2-city/lib/government';
 import { improvementOf } from '@civ-clone/base-city-improvement-rules/lib/has';
 import { reduceYield } from '@civ-clone/core-yield/lib/reduceYields';
@@ -58,12 +58,7 @@ export const getRules = (dependencies: YieldDependencies = {}): YieldRule[] => {
     has = (city: City, Improvement: typeof CityImprovement): boolean =>
       improvementOf(city, Improvement, registries.cityImprovementRegistry) !==
       null,
-    tithes = (city: City): number =>
-      contents.reduce(
-        (total: number, content): number =>
-          total + (content(city, registries)?.value ?? 0),
-        0
-      );
+    tithes = (city: City): number => cityTithes(city, registries);
 
   return [
     // OpenCiv2 `city_tile_yield` (richardpenman/civ2@49f26ec): a Harbour adds 1 food to each ocean square the city
@@ -140,7 +135,7 @@ export const getRules = (dependencies: YieldDependencies = {}): YieldRule[] => {
       )
     ),
 
-    // `city_split_trade`: under Fundamentalism the improvements' content citizens are paid as tithes, in gold, before
+    // `city_split_trade`: under Fundamentalism the improvements' content citizens (and J. S. Bach's) are paid as tithes, in gold, before
     //  the Marketplace's bonus.
     new YieldRule(
       'civ2-city-improvement:city/yield/tithes',
