@@ -1,0 +1,17 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = void 0;
+const core_game_1 = require("@civ-clone/core-game");
+const growthLimit_1 = require("./AdditionalData/growthLimit");
+const pollution_1 = require("./AdditionalData/pollution");
+const register = (game) => game.additionalData.register(...(0, growthLimit_1.default)(game.cityImprovements), ...(0, pollution_1.default)({
+    cityImprovementRegistry: game.cityImprovements,
+    wonderRegistry: game.wonders,
+    playerResearchRegistry: game.playerResearch,
+    requirementRegistry: game.requirements,
+}, game.rules, game.cityGrowth));
+exports.register = register;
+// Imported for this side effect, as `registerRules` is.
+(0, exports.register)(core_game_1.defaultGame);
+exports.default = exports.register;
+//# sourceMappingURL=registerAdditionalData.js.map
