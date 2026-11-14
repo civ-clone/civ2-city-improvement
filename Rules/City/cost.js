@@ -30,7 +30,13 @@ const getRules = (dependencies = {}) => {
         // Upkeep (`lib/upkeep`), paid only by a person's cities and not under Anarchy (OpenCiv2
         //  `city_pay_improvement_upkeep`, richardpenman/civ2@49f26ec), and only where it's more than nothing, so the
         //  treasury's bankruptcy sale can't take an improvement that costs nothing (the Palace).
-        ...improvements_1.default.flatMap(([Improvement]) => (0, maintenance_1.default)([[Improvement, Yields_1.CityImprovementMaintenanceGold, upkeepOf(Improvement)]], { cityImprovementRegistry: registries.cityImprovementRegistry }, {
+        ...improvements_1.default.flatMap(([Improvement]) => (0, maintenance_1.default)([
+            [
+                Improvement,
+                Yields_1.CityImprovementMaintenanceGold,
+                upkeepOf(Improvement),
+            ],
+        ], { cityImprovementRegistry: registries.cityImprovementRegistry }, {
             idPrefix: 'civ2-city-improvement',
             criteria: [
                 new Criterion_1.default((city) => (0, isHuman_1.default)(city.player(), clientRegistry)),
@@ -45,8 +51,7 @@ const getRules = (dependencies = {}) => {
             return new Yields_1.CityImprovementContent(Math.min(value, (0, reduceYields_1.reduceYield)(yields, Yields_1.Unhappiness)), source);
         }))),
         // Under Democracy a Courthouse, or the Palace, makes one content citizen happy.
-        new Cost_1.default('civ2-city-improvement:city/cost/courthouse-democracy', new Low_1.default(), new Criterion_1.default((city) => (0, government_1.default)(city.player(), playerGovernmentRegistry) === governments_1.DEMOCRACY), new Criterion_1.default((city) => (0, has_1.improvementOf)(city, CityImprovements_1.Courthouse, registries.cityImprovementRegistry) !==
-            null ||
+        new Cost_1.default('civ2-city-improvement:city/cost/courthouse-democracy', new Low_1.default(), new Criterion_1.default((city) => (0, government_1.default)(city.player(), playerGovernmentRegistry) === governments_1.DEMOCRACY), new Criterion_1.default((city) => (0, has_1.improvementOf)(city, CityImprovements_1.Courthouse, registries.cityImprovementRegistry) !== null ||
             (0, has_1.improvementOf)(city, CityImprovements_1.Palace, registries.cityImprovementRegistry) !==
                 null), new Effect_1.default((city) => {
             var _a;

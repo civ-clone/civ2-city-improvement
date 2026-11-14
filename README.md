@@ -19,28 +19,30 @@ citing its function. Other numbers are in `data/rules.ts`.
 - **Every improvement built is registered** in the game's `cityImprovements`, Wonders included, so a Wonder stays known
   as built after its city is gone.
 - **Upkeep** (`lib/upkeep`, `Rules/City/cost`): @IMPROVE's, with Barracks' steps, Adam Smith's and Fundamentalism's free
-  Temples, Colosseums and Cathedrals; paid only by a person's cities and not under Anarchy (`city_pay_improvement_upkeep`).
+  Temples, Colosseums and Cathedrals; paid only by a person's cities and not under Anarchy
+  (`city_pay_improvement_upkeep`).
 - **Growth** (`Rules/City/grow`): the Aqueduct (8) and Sewer System (12) caps from @COSMIC; a Granary (or the Pyramids)
   leaves half a box after growth.
 - **Content** (`lib/content`): a Colosseum, a Cathedral (or Michelangelo's) and a Temple (doubled by the Oracle), with
   Civ2's advance steps; under Democracy a Courthouse or the Palace makes a citizen happy; under Fundamentalism their
   content is paid as tithes.
 - **The Courthouse** halves corruption before the trade is split (`Rules/City/yield`).
-- **Multipliers** (`lib/bonus`): Marketplace, Bank and Stock Exchange, and Library, University and Research Lab (or SETI;
-  all of it in Newton's city), each half the base, never compounding; Factory, Manufacturing Plant and plants (or the
-  Hoover Dam) a quarter-step each. Harbour, Offshore Platform and Superhighways add to the squares worked.
+- **Multipliers** (`lib/bonus`): Marketplace, Bank and Stock Exchange, and Library, University and Research Lab (or
+  SETI; all of it in Newton's city), each half the base, never compounding; Factory, Manufacturing Plant and plants (or
+  the Hoover Dam) a quarter-step each. Harbour, Offshore Platform and Superhighways add to the squares worked.
 - **Veterans** (`Rules/Unit/created`): Barracks (or Sun Tzu's) for land units, a Port Facility (or the Lighthouse) for
   ships, an Airport for aircraft; obsolete Barracks are sold on Gunpowder and Mobile Warfare.
 - **Defences** (`Rules/Unit/strength`): a Coastal Fortress, SAM Missile Battery and SDI Defense each double a defence.
   City Walls are civ2-unit's (by class).
-- **Pollution** (`lib/pollution`, `Rules/City/pollution`): Civ2's shields and population steps, divisors and roll,
-  only in a person's cities.
+- **Pollution** (`lib/pollution`, `Rules/City/pollution`): Civ2's shields and population steps, divisors and roll, only
+  in a person's cities.
 
 ## Not yet (Civ2 M2a deviations and gaps)
 
 - **Supermarket:** farmland is inert until G20, so the Supermarket does nothing.
-- **Airport airlifts, Superhighways and Airport trade route bonuses, Police Station's exemption** (civ2-city-happiness)
-  and the **SDI Defense's protection from nuclear attack** (civ2-unit's detonation has no veto for it yet).
+- **Airport airlifts, Superhighways and Airport trade route bonuses** (no trade routes in M2a), the Police Station's
+  exemption (civ2-city-happiness#2, by the same "improvement or Wonder" test), and the **SDI Defense's protection from
+  nuclear attack** (civ2-unit's detonation has no veto for it yet).
 - **Squares:** Harbour, Offshore Platform and Superhighways add to the city's totals rather than each square's yield, so
   they come before the government's square penalty rather than after.
 - **Capture:** a city retaken by its founder loses its Palace too (Civ2 leaves the bit, giving the founder a second);
