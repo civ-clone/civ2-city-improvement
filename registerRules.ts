@@ -11,6 +11,7 @@ import cityCreated from './Rules/City/created';
 import cityDestroyed from './Rules/City/destroyed';
 import cityGrow from './Rules/City/grow';
 import cityImprovementCreated from './Rules/CityImprovement/created';
+import cityMeltdown from './Rules/City/meltdown';
 import cityPollution from './Rules/City/pollution';
 import cityPollutionDivisor from './Rules/City/pollution-divisor';
 import cityTileYield from './Rules/City/tile-yield';
@@ -69,6 +70,7 @@ export const register = (game: Game): void => {
     ...cityDestroyed(game.cityImprovements),
     ...cityGrow(registries),
     ...cityPollution(dependencies),
+    ...cityMeltdown(dependencies),
     ...cityPollutionDivisor(registries),
     ...cityImprovementCreated(game.cityImprovements, game.engine),
     ...cityTileYield(dependencies),

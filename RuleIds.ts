@@ -6,3 +6,7 @@ export const POLLUTION_RULE =
 
 /** The Courthouse halves the corruption civ2-city's rule works out, before the trade is split. */
 export const COURTHOUSE_RULE = 'civ2-city-improvement:city/yield/courthouse';
+
+/** A person's city in disorder with a Nuclear Plant may melt down, after its pollution roll. */
+export const MELTDOWN_RULE =
+  'civ2-city-improvement:city/process-yield/nuclear-meltdown';
