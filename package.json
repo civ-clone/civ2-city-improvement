@@ -1,6 +1,6 @@
 {
   "name": "@civ-clone/civ2-city-improvement",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Civilization II's 34 city improvements: cost, upkeep and requirements, the Palace and the capital, growth limits, the Granary, content, the Courthouse, the multipliers, veterans, defences and pollution, on base-city-improvement-rules.",
   "main": "index.js",
   "repository": "git@github.com:civ-clone/civ2-city-improvement.git",
