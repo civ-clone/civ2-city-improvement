@@ -12,6 +12,7 @@ import cityGrow from './Rules/City/grow';
 import cityImprovementCreated from './Rules/CityImprovement/created';
 import cityPollution from './Rules/City/pollution';
 import cityPollutionDivisor from './Rules/City/pollution-divisor';
+import cityTileYield from './Rules/City/tile-yield';
 import cityYield from './Rules/City/yield';
 import cityYieldModifier from './Rules/City/yield-modifier';
 import { deriveBuildRules } from '@civ-clone/base-city-improvement-rules/lib/build';
@@ -68,6 +69,7 @@ export const register = (game: Game): void => {
     ...cityPollution(dependencies),
     ...cityPollutionDivisor(registries),
     ...cityImprovementCreated(game.cityImprovements, game.engine),
+    ...cityTileYield(dependencies),
     ...cityYield(dependencies),
     ...cityYieldModifier(registries),
     ...playerResearchComplete(

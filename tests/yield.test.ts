@@ -2,11 +2,8 @@ import {
   Bank,
   Courthouse,
   Factory,
-  Harbour,
   Library,
   ManufacturingPlant,
-  OffshorePlatform,
-  Superhighways,
   Marketplace,
   PowerPlant,
   ResearchLab,
@@ -15,7 +12,6 @@ import {
 } from '../CityImprovements';
 import {
   Corruption,
-  Food,
   Gold,
   Luxuries,
   Production,
@@ -34,8 +30,6 @@ import Criterion from '@civ-clone/core-rule/Criterion';
 import Effect from '@civ-clone/core-rule/Effect';
 import { Fundamentalism } from '@civ-clone/civ2-government/Governments';
 import High from '@civ-clone/core-rule/Priorities/High';
-import { Ocean } from '@civ-clone/civ2-world/Terrains';
-import { Road } from '@civ-clone/civ2-world/TileImprovements';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
 import Yield from '@civ-clone/core-yield/Yield';
 import YieldRule from '@civ-clone/core-city/Rules/Yield';
@@ -51,16 +45,9 @@ const setUp = (
   corruption: number,
   Government: any = undefined
 ) => {
-  const r = {
-      ...registries(),
-      tileImprovements: new Map<unknown, unknown[]>(),
-    },
+  const r = registries(),
     ruleRegistry = new RuleRegistry(),
-    tiles: unknown[] = [],
-    city: City = cityOf('p', {
-      _ruleRegistry: ruleRegistry,
-      tilesWorked: () => ({ entries: () => tiles }),
-    });
+    city: City = cityOf('p', { _ruleRegistry: ruleRegistry });
 
   ruleRegistry.register(
     new YieldRule('squares', new Effect((): Yield[] => base)),
@@ -81,9 +68,6 @@ const setUp = (
     ...yieldRules({
       ...r,
       playerGovernmentRegistry: governedBy(Government),
-      tileImprovementRegistry: {
-        getByTile: (tile: unknown) => r.tileImprovements.get(tile) ?? [],
-      } as any,
     }),
     ...yieldModifiers(r)
   );
@@ -91,7 +75,6 @@ const setUp = (
   return {
     city,
     r,
-    tiles,
     total: (Type: typeof Yield) => reduceYield(city.yields(), Type),
   };
 };
@@ -129,32 +112,6 @@ describe('city:yield, the Courthouse and the Palace', (): void => {
     );
 
     expect(total(Corruption)).equal(-7);
-  });
-});
-
-describe('city:yield, squares', (): void => {
-  it('an Offshore Platform adds 1 shield for each ocean square worked', (): void => {
-    const { city, r, tiles, total } = setUp([new Production(2)], 0);
-
-    tiles.push({ terrain: () => new Ocean() }, { terrain: () => ({}) });
-    r.cityImprovementRegistry.register(built(OffshorePlatform, city));
-    expect(total(Production)).equal(3);
-  });
-
-  it('Superhighways add half the trade, rounded down, of each square with a road or the city', (): void => {
-    const { city, r, tiles, total } = setUp([new Trade(0)], 0),
-      road = new Road(),
-      trade = (value: number) => ({
-        terrain: () => ({}),
-        yields: () => [new Trade(value)],
-      });
-
-    tiles.push(trade(3), trade(5), trade(4));
-    (city as any).tile = () => tiles[2];
-    r.tileImprovements.set(tiles[0], [road]);
-    r.cityImprovementRegistry.register(built(Superhighways, city));
-    // 3 with a road: +1; 5 without: nothing; 4 on the city's square: +2.
-    expect(total(Trade)).equal(3);
   });
 });
 
@@ -207,20 +164,7 @@ describe('city:yield-modifier', (): void => {
   });
 });
 
-describe('city:yield, squares and tithes', (): void => {
-  it('a Harbour adds 1 food for each ocean square worked', (): void => {
-    const { city, r, tiles, total } = setUp([new Food(4)], 0);
-
-    tiles.push(
-      { terrain: () => new Ocean() },
-      { terrain: () => new Ocean() },
-      { terrain: () => ({}) }
-    );
-    expect(total(Food)).equal(4);
-    r.cityImprovementRegistry.register(built(Harbour, city));
-    expect(total(Food)).equal(6);
-  });
-
+describe('city:yield, tithes', (): void => {
   it("under Fundamentalism pays the improvements' content as tithes, before the Marketplace", (): void => {
     const { city, r, total } = setUp([new Trade(0)], 0, Fundamentalism);
 
