@@ -28,6 +28,7 @@
     "@civ-clone/base-city-yield-luxury-happiness": "^0.1.0",
     "@civ-clone/base-city-yield-population-unhappiness": "^0.1.0",
     "@civ-clone/civ2-asset-extractor": "github:civ-clone/civ2-asset-extractor",
+    "@civ-clone/civ2-city-happiness": "github:civ-clone/civ2-city-happiness#feat/m2c",
     "@civ-clone/civ2-government": "github:civ-clone/civ2-government",
     "@civ-clone/civ2-trade-rate": "github:civ-clone/civ2-trade-rate",
     "@civ-clone/core-trade-rate": "^0.1.6",
