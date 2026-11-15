@@ -11,6 +11,7 @@ const Effect_1 = require("@civ-clone/core-rule/Effect");
 const Wonder_1 = require("@civ-clone/core-wonder/Wonder");
 const improvements_1 = require("../../data/improvements");
 const ClientRegistry_1 = require("@civ-clone/core-client/ClientRegistry");
+const founder_1 = require("@civ-clone/civ2-city/lib/founder");
 const isHuman_1 = require("@civ-clone/civ2-difficulty/isHuman");
 const rules_1 = require("../../data/rules");
 const core_random_1 = require("@civ-clone/core-random");
@@ -23,7 +24,6 @@ exports.lostOnCapture = [
     CityImprovements_1.Courthouse,
 ];
 const rowOf = new Map(improvements_1.default.map(([Improvement], index) => [Improvement, index + 1]));
-const isFounder = (city, capturer) => city.originalPlayer() === capturer;
 // OpenCiv2 `src/auto/city.cpp` `city_capture_aftermath` (richardpenman/civ2@49f26ec), in its order:
 //  - a player that loses its capital may buy the Palace into another city for 1000 gold (`lib/capital`): a computer
 //    player decides by itself, a person's client is asked, and plunder waits for the answer (`lib/palaceEscapeChoice`);
@@ -31,8 +31,8 @@ const isFounder = (city, capturer) => city.originalPlayer() === capturer;
 //    capital: here it's always lost);
 //  - taken by anyone but its founder, the city loses its Temple, Cathedral and Courthouse, and then, conquered rather
 //    than incited, every improvement in an odd @IMPROVE row, or every one in an even row, on one roll. Wonders aren't
-//    improvements here. The founder is the city's original player (as civ2-city has it); Civ2 makes the loser the
-//    founder after each capture.
+//    improvements here. The founder is civ2-city's (`lib/founder`, `was_founder` ~5440): the loser of the city's last
+//    capture, or whoever has held it 63 turns since, read before civ2-city records this capture.
 const getRules = (dependencies = {}, randomNumberGenerator = core_random_1.instance) => {
     const { cityImprovementRegistry } = (0, source_1.withDefaults)(dependencies), { clientRegistry = ClientRegistry_1.instance } = dependencies, standing = (city) => cityImprovementRegistry
         .getByCity(city)
@@ -57,7 +57,7 @@ const getRules = (dependencies = {}, randomNumberGenerator = core_random_1.insta
         new Captured_1.default('civ2-city-improvement:city/captured/palace', new Effect_1.default((city) => standing(city)
             .filter((improvement) => improvement instanceof CityImprovements_1.Palace)
             .forEach((palace) => palace.destroy()))),
-        new Captured_1.default('civ2-city-improvement:city/captured/lost', new Criterion_1.default((city, capturer) => !isFounder(city, capturer)), new Effect_1.default((city, capturer, loser, cause) => {
+        new Captured_1.default('civ2-city-improvement:city/captured/lost', new Criterion_1.default((city, capturer, loser) => (0, founder_1.founderOf)(city, loser, dependencies) !== capturer), new Effect_1.default((city, capturer, loser, cause) => {
             standing(city)
                 .filter((improvement) => exports.lostOnCapture.some((Lost) => improvement instanceof Lost))
                 .forEach((improvement) => improvement.destroy());

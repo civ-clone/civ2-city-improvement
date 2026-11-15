@@ -64,14 +64,13 @@ citing its function. Other numbers are in `data/rules.ts`.
 - **Not here, by design:** what Barracks, an Airport and a Port Facility do for a damaged unit (a full heal), an
   Airport's airlifts, and SDI Defense stopping a nuclear attack within 3 squares are civ2-unit's rules, which ask for
   the improvements' base classes, so civ2-unit doesn't depend on this package.
-- **Capture:** a city retaken by its founder loses its Palace too (Civ2 leaves the bit, giving the founder a second);
+- **Capture:** the founder a capture spares is civ2-city's (`lib/founder`: the loser of the last capture, or the owner
+  after 63 turns). A city retaken by its founder loses its Palace too (Civ2 leaves the bit, giving the founder a second);
   the escape's spaceship condition isn't modelled, nor the original skipping its first city slot (`0 < city3`).
 - **Communism's veteran Diplomats** (`city_process_production_unit`) aren't modelled.
 - **The Palace escape** counts the loser's cities and the captured city's size after civ2-city's capture rules have run
   (Civ2 counts before), and measures distance by the world's own metric rather than Civ2's diagonal one, so it can be
   one off at its thresholds.
-- **The founder** is the city's original player, as civ2-city has it; Civ2 makes the loser the founder after each
-  capture, so a city taken back and forth loses differently.
 - **A computer player's late refounding** with free improvements isn't modelled.
 - **Shield waste**, and the computer players' shield rows by level, are civ2-city's and civ2-difficulty's; the Airport's
   part in the capital link (across land masses) is civ2-city's walk.

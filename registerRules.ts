@@ -39,11 +39,14 @@ export const register = (game: Game): void => {
       gameDifficultyRegistry: game.difficulty,
       interactionRegistry: game.interactions,
       landMassRegistry: game.landMasses,
+      pendingEffectRegistry: game.pendingEffects,
+      playerRegistry: game.players,
       playerGovernmentRegistry: game.playerGovernments,
       playerTreasuryRegistry: game.playerTreasuries,
       randomNumberGenerator: game.rng,
       ruleRegistry: game.rules,
       tileImprovementRegistry: game.tileImprovements,
+      turn: game.turn,
       unitRegistry: game.units,
     };
 

@@ -1,5 +1,6 @@
 import { CapitalDependencies } from './capital';
 import { ClientRegistry } from '@civ-clone/core-client/ClientRegistry';
+import { FounderDependencies } from '@civ-clone/civ2-city/lib/founder';
 import City from '@civ-clone/core-city/City';
 import Player from '@civ-clone/core-player/Player';
 declare global {
@@ -22,7 +23,9 @@ export declare const civ2CityWaitBeforePlunder: (
   city: City,
   pending: Promise<unknown>
 ) => void;
-export interface PalaceEscapeChoiceDependencies extends CapitalDependencies {
+export interface PalaceEscapeChoiceDependencies
+  extends CapitalDependencies,
+    FounderDependencies {
   clientRegistry?: ClientRegistry;
   /** Makes the capture's plunder wait for the answer: civ2-city's, by default. */
   waitBeforePlunder?: (city: City, pending: Promise<unknown>) => void;

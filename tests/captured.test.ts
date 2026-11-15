@@ -392,3 +392,79 @@ describe("a person's Palace escape with civ2-city's plunder", (): void => {
     expect(gold.get(captor)).equal(200);
   });
 });
+
+describe("city:captured, with civ2-city's founder", (): void => {
+  const setUp = () => {
+    const [a, b, c] = ['A', 'B', 'C'].map((name) => ({
+        name,
+        id: () => name,
+      })) as any[],
+      r = registries(),
+      ruleRegistry = new RuleRegistry(),
+      effects: any[] = [],
+      now = { turn: 1 },
+      city = cityOf(a, { id: () => 'X' }),
+      founder = {
+        pendingEffectRegistry: {
+          getByTarget: (target: unknown) =>
+            effects.filter((effect) => effect.target() === target),
+          register: (...added: any[]) => effects.push(...added),
+          unregister: (...removed: any[]) =>
+            removed.forEach((effect) =>
+              effects.splice(effects.indexOf(effect), 1)
+            ),
+        } as any,
+        playerRegistry: { entries: () => [a, b, c] } as any,
+        turn: { value: () => now.turn } as any,
+      };
+
+    ruleRegistry.register(
+      ...captured(
+        {
+          ...r,
+          ...founder,
+          cityRegistry: { getByPlayer: () => [] } as any,
+          clientRegistry: playedBy(),
+          gameDifficultyRegistry: atLevel(0),
+        },
+        () => 0.9
+      ),
+      // civ2-city's own record of the capture, after everything else.
+      ...captureRules(
+        { getByCity: () => [] } as any,
+        { getByCity: () => ({ size: () => 4 }) } as any,
+        new Engine(),
+        withCaptureDefaults({ ruleRegistry, ...founder } as any)
+      ).filter((rule) => rule.id() === 'civ2-city:city/captured/founder')
+    );
+
+    // Whether `captor` taking the city from `loser` destroys its Temple.
+    const takes = (captor: unknown, loser: unknown): boolean => {
+      const temple = built(Temple, city);
+
+      r.cityImprovementRegistry.register(temple);
+      ruleRegistry.process(Captured, city, captor as any, loser as any, null);
+
+      return temple.destroyed();
+    };
+
+    return { a, b, c, now, takes };
+  };
+
+  it('loses nothing when B retakes the city C took from it, though A founded it (was_founder ~5440)', (): void => {
+    const { a, b, c, takes } = setUp();
+
+    expect(takes(b, a)).true;
+    expect(takes(c, b)).true;
+    expect(takes(b, c)).false;
+  });
+
+  it('counts A retaking it as a conquest once C has held it for 63 turns (city_process_turn ~4450)', (): void => {
+    const { a, b, c, now, takes } = setUp();
+
+    expect(takes(b, a)).true;
+    expect(takes(c, b)).true;
+    now.turn += 64;
+    expect(takes(a, c)).true;
+  });
+});
