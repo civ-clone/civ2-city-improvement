@@ -15,6 +15,7 @@ import { built, cityOf, registries } from './lib/stubs';
 import { pollution, populationFactor, rollRange } from '../lib/pollution';
 import { HooverDam } from '../Wonders';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
+import { Waste } from '@civ-clone/civ2-city/Yields';
 import { expect } from 'chai';
 import pollutionDivisor from '../Rules/City/pollution-divisor';
 
@@ -46,6 +47,16 @@ describe('lib/pollution', (): void => {
 
     // Unit support (3) is ignored: the shields are counted before it.
     expect(plain.of(30)).equal(30 - 20);
+    // So is civ2-city's waste, which `city_calc_shields_pollution` takes off after the pollution (~3435–3441).
+    expect(
+      pollution(
+        plain.city,
+        [new Production(30), new Waste(4)],
+        plain.r,
+        new RuleRegistry(),
+        { getByCity: () => ({ size: () => 8 }) } as any
+      )
+    ).equal(30 - 20);
 
     const recycling = setUp();
 

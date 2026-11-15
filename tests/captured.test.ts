@@ -18,6 +18,11 @@ import captured from '../Rules/City/captured';
 import InciteRevolt from '@civ-clone/base-unit-action-incite-revolt/InciteRevolt';
 import Engine from '@civ-clone/core-engine/Engine';
 import improvementCreated from '../Rules/CityImprovement/created';
+import {
+  captureRules,
+  withCaptureDefaults,
+} from '@civ-clone/civ2-city/lib/captureAftermath';
+import { civ2CityWaitBeforePlunder } from '../lib/palaceEscapeChoice';
 import { expect } from 'chai';
 import { palaceEscape, palaceEscapeCandidate } from '../lib/capital';
 
@@ -306,5 +311,84 @@ describe('city:captured', (): void => {
       'Aqueduct',
       'Library',
     ]);
+  });
+});
+
+describe("a person's Palace escape with civ2-city's plunder", (): void => {
+  it('pays 1000 for the Palace first, and plunder takes only what is left (city_capture_aftermath ~5462–5475)', async (): Promise<void> => {
+    const loser = { name: 'loser' } as any,
+      captor = { name: 'captor' } as any,
+      { captive, dependencies, others, r } = world({
+        human: true,
+        level: 0,
+        cities: 5,
+        gold: 1200,
+        loser,
+      }),
+      gold = new Map<unknown, number>([
+        [loser, 1200],
+        [captor, 0],
+      ]),
+      treasuryOf = (player: unknown) => ({
+        value: () => gold.get(player)!,
+        yield: () => Gold,
+        add: (n: number) => gold.set(player, gold.get(player)! + n),
+        subtract: (n: number) => gold.set(player, gold.get(player)! - n),
+      }),
+      playerTreasuryRegistry = {
+        getByPlayer: (player: unknown) => [treasuryOf(player)],
+      } as any,
+      ruleRegistry = new RuleRegistry(),
+      waited: Promise<unknown>[] = [],
+      all = {
+        ...dependencies,
+        playerTreasuryRegistry,
+        ruleRegistry,
+        clientRegistry: {
+          ...playedBy(loser),
+          getByPlayer: () => ({ chooseFromList: async () => true }),
+        } as any,
+        waitBeforePlunder: (city: City, pending: Promise<unknown>) => {
+          waited.push(pending);
+          civ2CityWaitBeforePlunder(city, pending);
+        },
+      };
+
+    r.cityImprovementRegistry.register(built(Palace, captive));
+    ruleRegistry.register(
+      ...improvementCreated(r.cityImprovementRegistry, new Engine()),
+      ...captured(all, () => 0.9),
+      ...captureRules(
+        { getByCity: () => [] } as any,
+        dependencies.cityGrowthRegistry,
+        new Engine(),
+        withCaptureDefaults({
+          cityRegistry: dependencies.cityRegistry,
+          playerRegistry: { entries: () => [] } as any,
+          playerResearchRegistry: {
+            getByPlayer: () => ({ complete: () => [], completed: () => false }),
+          } as any,
+          playerTreasuryRegistry,
+          ruleRegistry,
+        })
+      ).filter((rule) =>
+        [
+          'civ2-city:city/captured/plunder-share',
+          'civ2-city:city/captured/plunder',
+        ].includes(rule.id()!)
+      )
+    );
+    ruleRegistry.process(Captured, captive, captor, loser, null);
+
+    await Promise.all(waited);
+    // Let the plunder's own `then` run.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // The share would be 10 × 1200 / (46 + 1) = 255; after the Palace's 1000, 200 is left to take.
+    expect(
+      r.cityImprovementRegistry.getByType(Palace).map((p) => p.city())
+    ).eql([others[2]]);
+    expect(gold.get(loser)).equal(0);
+    expect(gold.get(captor)).equal(200);
   });
 });

@@ -16,9 +16,10 @@ citing its function. Other numbers are in `data/rules.ts`.
   loses it, and its player may buy it into its best city for 1000 gold (`city_capture_aftermath_palace_escape`): a
   computer player decides by itself; a person's client is asked there and then (`lib/palaceEscapeChoice`,
   `capture-city.palace-escape`, yes or no, with the city and the cost), and the capture's plunder waits for the
-  answer, as Civ2 pays for the escape before plunder (through civ2-city's `waitBeforePlunder`, once it has one).
+  answer, as Civ2 pays for the escape before plunder (through civ2-city's `waitBeforePlunder`).
   civ2-city measures corruption from it. A computer player without one rebuilds it in its largest city
-  (`Rules/City/build-priority`).
+  (`Rules/City/build-priority`). These rules of thumb rank only a computer player's own choices: a city on Auto is
+  ranked by civ2-city's Civ2 scores.
 - **Every improvement built is registered** in the game's `cityImprovements`, Wonders included, so a Wonder stays known
   as built after its city is gone.
 - **Upkeep** (`lib/upkeep`, `Rules/City/cost`): @IMPROVE's, with Barracks' steps, Adam Smith's and Fundamentalism's free
@@ -54,7 +55,7 @@ citing its function. Other numbers are in `data/rules.ts`.
 - **Defences** (`Rules/Unit/strength`): a Coastal Fortress, SAM Missile Battery and SDI Defense each double a defence.
   City Walls are civ2-unit's (by class).
 - **Pollution** (`lib/pollution`, `Rules/City/pollution`): Civ2's shields and population steps, divisors and roll, only
-  in a person's cities.
+  in a person's cities. The shields are counted before unit support and civ2-city's waste.
 
 ## Not yet (Civ2 M2a deviations and gaps)
 
@@ -64,8 +65,7 @@ citing its function. Other numbers are in `data/rules.ts`.
   Airport's airlifts, and SDI Defense stopping a nuclear attack within 3 squares are civ2-unit's rules, which ask for
   the improvements' base classes, so civ2-unit doesn't depend on this package.
 - **Capture:** a city retaken by its founder loses its Palace too (Civ2 leaves the bit, giving the founder a second);
-  the escape's spaceship condition isn't modelled, nor the original skipping its first city slot (`0 < city3`). Until
-  civ2-city's plunder waits for a person's answer, plunder is taken first and the escape is paid from what's left.
+  the escape's spaceship condition isn't modelled, nor the original skipping its first city slot (`0 < city3`).
 - **Communism's veteran Diplomats** (`city_process_production_unit`) aren't modelled.
 - **The Palace escape** counts the loser's cities and the captured city's size after civ2-city's capture rules have run
   (Civ2 counts before), and measures distance by the world's own metric rather than Civ2's diagonal one, so it can be

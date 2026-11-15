@@ -42,6 +42,11 @@ import {
   Unhappiness,
 } from '../../Yields';
 import { UpkeepDependencies, upkeep } from '../../lib/upkeep';
+import { IBuildable as Buildable } from '@civ-clone/core-city-build/Buildable';
+import CityBuild from '@civ-clone/core-city-build/CityBuild';
+import Criterion from '@civ-clone/core-rule/Criterion';
+import Effect from '@civ-clone/core-rule/Effect';
+import Yield from '@civ-clone/core-yield/Yield';
 import { aqueductSize, sewerSize } from '../../data/rules';
 import BuildPriority from '@civ-clone/core-city-build/Rules/BuildPriority';
 import City from '@civ-clone/core-city/City';
@@ -87,6 +92,23 @@ export const getRules = (
 
       return largest === city;
     };
+
+  // A city on Auto is ranked by civ2-city's own scores (`civ2-city:city/build-priority/auto`,
+  //  `city_choose_production_improvement_score`); these rules of thumb are for a computer player's own choice only.
+  const notOnAuto = (rule: BuildPriority): BuildPriority =>
+    new BuildPriority(
+      rule.id()!,
+      rule.priority(),
+      new Criterion((cityBuild: CityBuild): boolean => !cityBuild.auto()),
+      new Criterion(
+        (cityBuild: CityBuild, item: Buildable, yields: Yield[]): boolean =>
+          rule.validate(cityBuild, item, yields)
+      ),
+      new Effect(
+        (cityBuild: CityBuild, item: Buildable, yields: Yield[]): number =>
+          rule.process(cityBuild, item, yields) as number
+      )
+    );
 
   return buildPriorityRules(
     'civ2-city-improvement',
@@ -150,7 +172,7 @@ export const getRules = (
     (Improvement: typeof CityImprovement, player: Player): number =>
       upkeep(Improvement, player, dependencies),
     dependencies
-  );
+  ).map(notOnAuto);
 };
 
 export default getRules;

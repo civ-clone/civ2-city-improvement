@@ -7,7 +7,10 @@ const CityGrowthRegistry_1 = require("@civ-clone/core-city-growth/CityGrowthRegi
 const CityRegistry_1 = require("@civ-clone/core-city/CityRegistry");
 const Yields_1 = require("../../Yields");
 const upkeep_1 = require("../../lib/upkeep");
+const Criterion_1 = require("@civ-clone/core-rule/Criterion");
+const Effect_1 = require("@civ-clone/core-rule/Effect");
 const rules_1 = require("../../data/rules");
+const BuildPriority_1 = require("@civ-clone/core-city-build/Rules/BuildPriority");
 const capital_1 = require("../../lib/capital");
 /** How much a city with no capital in its player's empire wants the Palace back: above any other need but war. */
 exports.palacePriority = 20;
@@ -30,6 +33,9 @@ const getRules = (dependencies = {}) => {
             .sort((a, b) => size(b) - size(a));
         return largest === city;
     };
+    // A city on Auto is ranked by civ2-city's own scores (`civ2-city:city/build-priority/auto`,
+    //  `city_choose_production_improvement_score`); these rules of thumb are for a computer player's own choice only.
+    const notOnAuto = (rule) => new BuildPriority_1.default(rule.id(), rule.priority(), new Criterion_1.default((cityBuild) => !cityBuild.auto()), new Criterion_1.default((cityBuild, item, yields) => rule.validate(cityBuild, item, yields)), new Effect_1.default((cityBuild, item, yields) => rule.process(cityBuild, item, yields)));
     return (0, buildPriority_1.buildPriorityRules)('civ2-city-improvement', {
         needs: [
             [
@@ -82,7 +88,7 @@ const getRules = (dependencies = {}) => {
         factories: [CityImprovements_1.Factory, CityImprovements_1.ManufacturingPlant],
         forWar: [CityImprovements_1.Barracks, CityImprovements_1.CityWalls],
         warPriority: 100,
-    }, { Corruption: Yields_1.Corruption, Food: Yields_1.Food, Gold: Yields_1.Gold, Luxuries: Yields_1.Luxuries, Production: Yields_1.Production, Research: Yields_1.Research, Unhappiness: Yields_1.Unhappiness }, (Improvement, player) => (0, upkeep_1.upkeep)(Improvement, player, dependencies), dependencies);
+    }, { Corruption: Yields_1.Corruption, Food: Yields_1.Food, Gold: Yields_1.Gold, Luxuries: Yields_1.Luxuries, Production: Yields_1.Production, Research: Yields_1.Research, Unhappiness: Yields_1.Unhappiness }, (Improvement, player) => (0, upkeep_1.upkeep)(Improvement, player, dependencies), dependencies).map(notOnAuto);
 };
 exports.getRules = getRules;
 exports.default = exports.getRules;
