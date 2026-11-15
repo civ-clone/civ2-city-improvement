@@ -18,8 +18,13 @@ import captured from '../Rules/City/captured';
 import InciteRevolt from '@civ-clone/base-unit-action-incite-revolt/InciteRevolt';
 import Engine from '@civ-clone/core-engine/Engine';
 import improvementCreated from '../Rules/CityImprovement/created';
+import {
+  captureRules,
+  withCaptureDefaults,
+} from '@civ-clone/civ2-city/lib/captureAftermath';
+import { civ2CityWaitBeforePlunder } from '../lib/palaceEscapeChoice';
 import { expect } from 'chai';
-import { palaceEscape } from '../lib/capital';
+import { palaceEscape, palaceEscapeCandidate } from '../lib/capital';
 
 const tile = (x: number) => ({
   x,
@@ -32,16 +37,18 @@ const world = ({
   cities = 12,
   human = false,
   capturedSize = 10,
+  loser = 'loser' as unknown,
 }: {
   level?: number;
   gold?: number;
   cities?: number;
   human?: boolean;
   capturedSize?: number;
+  loser?: unknown;
 } = {}) => {
   const r = registries(),
     sizes = new Map<City, number>(),
-    captive = cityOf('loser', { tile: () => tile(0) }),
+    captive = cityOf(loser, { tile: () => tile(0) }),
     others: City[] = [],
     treasury = {
       value: () => gold,
@@ -52,7 +59,7 @@ const world = ({
   sizes.set(captive, capturedSize);
 
   for (let i = 1; i <= cities; i++) {
-    const city = cityOf('loser', { tile: () => tile(i) });
+    const city = cityOf(loser, { tile: () => tile(i) });
 
     sizes.set(
       city,
@@ -67,7 +74,7 @@ const world = ({
       getByCity: (city: City) => ({ size: () => sizes.get(city) }),
     } as any,
     cityRegistry: { getByPlayer: () => [captive, ...others] } as any,
-    clientRegistry: playedBy(...(human ? ['loser'] : [])),
+    clientRegistry: playedBy(...(human ? [loser] : [])),
     gameDifficultyRegistry: atLevel(level),
     playerTreasuryRegistry: { getByPlayer: () => [treasury] } as any,
     unitRegistry: { getByTile: () => [] } as any,
@@ -110,6 +117,112 @@ describe('lib/capital: palaceEscape', (): void => {
 
     expect(palaceEscape(rich.captive, 'loser' as any, rich.dependencies)).not
       .null;
+  });
+});
+
+describe('lib/capital: palaceEscapeCandidate', (): void => {
+  it('halves the score of a city on another land mass (city_capture_aftermath_palace_escape ~4757)', (): void => {
+    const { captive, dependencies, others } = world(),
+      home = {},
+      away = {};
+
+    // City 3 (size 12, 3 away) scores 33, city 5 (size 9, 5 away) 22; city 3 on another land mass, 16.
+    expect(
+      palaceEscapeCandidate(captive, 'loser' as any, {
+        ...dependencies,
+        landMassRegistry: {
+          getByTile: (tile: any) => (tile.x === 3 ? away : home),
+        } as any,
+      })
+    ).equal(others[4]);
+  });
+
+  it("is the same for a person, with none of the computer player's conditions but the gold", (): void => {
+    const { captive, dependencies, others } = world({
+      human: true,
+      level: 0,
+      cities: 5,
+    });
+
+    expect(palaceEscape(captive, 'loser' as any, dependencies)).null;
+    expect(palaceEscapeCandidate(captive, 'loser' as any, dependencies)).equal(
+      others[2]
+    );
+  });
+});
+
+describe("city:captured, a person's Palace escape", (): void => {
+  const setUp = (gold: number, answer: boolean) => {
+    const loser = { name: 'loser' } as any,
+      {
+        captive,
+        dependencies,
+        gold: goldLeft,
+        others,
+        r,
+      } = world({
+        human: true,
+        level: 0,
+        cities: 5,
+        gold,
+        loser,
+      }),
+      ruleRegistry = new RuleRegistry(),
+      asked: any[] = [],
+      waited: Promise<unknown>[] = [],
+      all = {
+        ...dependencies,
+        ruleRegistry,
+        clientRegistry: {
+          ...playedBy(loser),
+          getByPlayer: () => ({
+            chooseFromList: async (meta: any) => {
+              asked.push(meta);
+
+              return answer;
+            },
+          }),
+        } as any,
+        waitBeforePlunder: (city: City, pending: Promise<unknown>) =>
+          waited.push(pending),
+      };
+
+    r.cityImprovementRegistry.register(built(Palace, captive));
+    ruleRegistry.register(
+      ...improvementCreated(r.cityImprovementRegistry, new Engine()),
+      ...captured(all, () => 0.9)
+    );
+    ruleRegistry.process(Captured, captive, 'taker' as any, loser, null);
+
+    return { asked, captive, goldLeft, others, r, waited };
+  };
+
+  it('asks them at the capture, plunder waits for the answer, and yes pays 1000 and moves the Palace', async (): Promise<void> => {
+    const { asked, goldLeft, others, r, waited } = setUp(1500, true);
+
+    expect(asked).length(1);
+    expect(asked[0].key()).equal('capture-city.palace-escape');
+    expect(asked[0].data().city === others[2]).true;
+    expect(asked[0].data().cost).equal(1000);
+    expect(waited).length(1);
+    expect(await waited[0]).true;
+    expect(
+      r.cityImprovementRegistry.getByType(Palace).map((p) => p.city())
+    ).eql([others[2]]);
+    expect(goldLeft()).equal(500);
+  });
+
+  it('no leaves the Palace lost and the gold for plunder; with no more than 999 gold they are not asked', async (): Promise<void> => {
+    const declined = setUp(1500, false);
+
+    expect(await declined.waited[0]).false;
+    expect(declined.r.cityImprovementRegistry.getByType(Palace)).eql([]);
+    expect(declined.goldLeft()).equal(1500);
+
+    const poor = setUp(999, true);
+
+    expect(poor.asked).eql([]);
+    expect(poor.waited).eql([]);
   });
 });
 
@@ -198,5 +311,160 @@ describe('city:captured', (): void => {
       'Aqueduct',
       'Library',
     ]);
+  });
+});
+
+describe("a person's Palace escape with civ2-city's plunder", (): void => {
+  it('pays 1000 for the Palace first, and plunder takes only what is left (city_capture_aftermath ~5462–5475)', async (): Promise<void> => {
+    const loser = { name: 'loser' } as any,
+      captor = { name: 'captor' } as any,
+      { captive, dependencies, others, r } = world({
+        human: true,
+        level: 0,
+        cities: 5,
+        gold: 1200,
+        loser,
+      }),
+      gold = new Map<unknown, number>([
+        [loser, 1200],
+        [captor, 0],
+      ]),
+      treasuryOf = (player: unknown) => ({
+        value: () => gold.get(player)!,
+        yield: () => Gold,
+        add: (n: number) => gold.set(player, gold.get(player)! + n),
+        subtract: (n: number) => gold.set(player, gold.get(player)! - n),
+      }),
+      playerTreasuryRegistry = {
+        getByPlayer: (player: unknown) => [treasuryOf(player)],
+      } as any,
+      ruleRegistry = new RuleRegistry(),
+      waited: Promise<unknown>[] = [],
+      all = {
+        ...dependencies,
+        playerTreasuryRegistry,
+        ruleRegistry,
+        clientRegistry: {
+          ...playedBy(loser),
+          getByPlayer: () => ({ chooseFromList: async () => true }),
+        } as any,
+        waitBeforePlunder: (city: City, pending: Promise<unknown>) => {
+          waited.push(pending);
+          civ2CityWaitBeforePlunder(city, pending);
+        },
+      };
+
+    r.cityImprovementRegistry.register(built(Palace, captive));
+    ruleRegistry.register(
+      ...improvementCreated(r.cityImprovementRegistry, new Engine()),
+      ...captured(all, () => 0.9),
+      ...captureRules(
+        { getByCity: () => [] } as any,
+        dependencies.cityGrowthRegistry,
+        new Engine(),
+        withCaptureDefaults({
+          cityRegistry: dependencies.cityRegistry,
+          playerRegistry: { entries: () => [] } as any,
+          playerResearchRegistry: {
+            getByPlayer: () => ({ complete: () => [], completed: () => false }),
+          } as any,
+          playerTreasuryRegistry,
+          ruleRegistry,
+        })
+      ).filter((rule) =>
+        [
+          'civ2-city:city/captured/plunder-share',
+          'civ2-city:city/captured/plunder',
+        ].includes(rule.id()!)
+      )
+    );
+    ruleRegistry.process(Captured, captive, captor, loser, null);
+
+    await Promise.all(waited);
+    // Let the plunder's own `then` run.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // The share would be 10 × 1200 / (46 + 1) = 255; after the Palace's 1000, 200 is left to take.
+    expect(
+      r.cityImprovementRegistry.getByType(Palace).map((p) => p.city())
+    ).eql([others[2]]);
+    expect(gold.get(loser)).equal(0);
+    expect(gold.get(captor)).equal(200);
+  });
+});
+
+describe("city:captured, with civ2-city's founder", (): void => {
+  const setUp = () => {
+    const [a, b, c] = ['A', 'B', 'C'].map((name) => ({
+        name,
+        id: () => name,
+      })) as any[],
+      r = registries(),
+      ruleRegistry = new RuleRegistry(),
+      effects: any[] = [],
+      now = { turn: 1 },
+      city = cityOf(a, { id: () => 'X' }),
+      founder = {
+        pendingEffectRegistry: {
+          getByTarget: (target: unknown) =>
+            effects.filter((effect) => effect.target() === target),
+          register: (...added: any[]) => effects.push(...added),
+          unregister: (...removed: any[]) =>
+            removed.forEach((effect) =>
+              effects.splice(effects.indexOf(effect), 1)
+            ),
+        } as any,
+        playerRegistry: { entries: () => [a, b, c] } as any,
+        turn: { value: () => now.turn } as any,
+      };
+
+    ruleRegistry.register(
+      ...captured(
+        {
+          ...r,
+          ...founder,
+          cityRegistry: { getByPlayer: () => [] } as any,
+          clientRegistry: playedBy(),
+          gameDifficultyRegistry: atLevel(0),
+        },
+        () => 0.9
+      ),
+      // civ2-city's own record of the capture, after everything else.
+      ...captureRules(
+        { getByCity: () => [] } as any,
+        { getByCity: () => ({ size: () => 4 }) } as any,
+        new Engine(),
+        withCaptureDefaults({ ruleRegistry, ...founder } as any)
+      ).filter((rule) => rule.id() === 'civ2-city:city/captured/founder')
+    );
+
+    // Whether `captor` taking the city from `loser` destroys its Temple.
+    const takes = (captor: unknown, loser: unknown): boolean => {
+      const temple = built(Temple, city);
+
+      r.cityImprovementRegistry.register(temple);
+      ruleRegistry.process(Captured, city, captor as any, loser as any, null);
+
+      return temple.destroyed();
+    };
+
+    return { a, b, c, now, takes };
+  };
+
+  it('loses nothing when B retakes the city C took from it, though A founded it (was_founder ~5440)', (): void => {
+    const { a, b, c, takes } = setUp();
+
+    expect(takes(b, a)).true;
+    expect(takes(c, b)).true;
+    expect(takes(b, c)).false;
+  });
+
+  it('counts A retaking it as a conquest once C has held it for 63 turns (city_process_turn ~4450)', (): void => {
+    const { a, b, c, now, takes } = setUp();
+
+    expect(takes(b, a)).true;
+    expect(takes(c, b)).true;
+    now.turn += 64;
+    expect(takes(a, c)).true;
   });
 });

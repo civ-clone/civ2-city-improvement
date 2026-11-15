@@ -1,9 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.describedRequirements = exports.buildRequirements = exports.notBuilt = exports.notInCity = exports.excludedBy = exports.requiresImprovement = exports.requiresAdvance = void 0;
+exports.describedRequirements = exports.buildRequirements = exports.notBuilt = exports.notInCity = exports.excludedBy = exports.requiresImprovement = exports.capitalizationRequires = exports.requiresAdvance = void 0;
 const CityImprovements_1 = require("./CityImprovements");
 const Requirement_1 = require("@civ-clone/core-requirement/Requirement");
+const Capitalization_1 = require("@civ-clone/base-city-improvement-capitalization/Capitalization");
 const CityImprovement_1 = require("@civ-clone/core-city-improvement/CityImprovement");
+const Advances_1 = require("@civ-clone/civ2-science/Advances");
 const improvements_1 = require("./data/improvements");
 // What Civilization II's city improvements need, and what stops a city building them (OpenCiv2 `src/auto/city.cpp`
 //  `city_can_build_improvement`, richardpenman/civ2@49f26ec), as entries `Rules/City/build` makes its rules from.
@@ -11,6 +13,8 @@ const improvements_1 = require("./data/improvements");
 exports.requiresAdvance = (0, Requirement_1.table)('civ2-city-improvement:city/build/requires-advance', 'requires', improvements_1.default
     .filter(([, , , Advance]) => Advance !== null)
     .map(([Improvement, , , Advance]) => [Improvement, Advance]));
+/** Capitalization (@IMPROVE row 38) needs The Corporation. */
+exports.capitalizationRequires = (0, Requirement_1.table)('civ2-city-improvement:city/build/requires-advance', 'requires', [[Capitalization_1.default, Advances_1.Corporation]]);
 /** The improvements a city needs, any one of, before it can build each improvement. */
 exports.requiresImprovement = (0, Requirement_1.table)('civ2-city-improvement:city/build/requires-improvement', 'requires', [
     [CityImprovements_1.Bank, CityImprovements_1.Marketplace],
@@ -47,6 +51,7 @@ exports.notBuilt = new Requirement_1.Requirement({
 /** The entries `Rules/City/build`'s deriver makes rules from. */
 exports.buildRequirements = [
     ...exports.requiresAdvance,
+    ...exports.capitalizationRequires,
     ...exports.requiresImprovement,
     ...exports.excludedBy,
 ];

@@ -4,14 +4,17 @@ import { Game, defaultGame } from '@civ-clone/core-game';
 import { Registries } from './lib/source';
 import cityBuildCost from './Rules/City/build-cost';
 import cityBuildPriority from './Rules/City/build-priority';
+import cityCapitalization from './Rules/City/capitalization';
 import cityCaptured from './Rules/City/captured';
 import cityCost from './Rules/City/cost';
 import cityCreated from './Rules/City/created';
 import cityDestroyed from './Rules/City/destroyed';
 import cityGrow from './Rules/City/grow';
 import cityImprovementCreated from './Rules/CityImprovement/created';
+import cityMeltdown from './Rules/City/meltdown';
 import cityPollution from './Rules/City/pollution';
 import cityPollutionDivisor from './Rules/City/pollution-divisor';
+import cityTileYield from './Rules/City/tile-yield';
 import cityYield from './Rules/City/yield';
 import cityYieldModifier from './Rules/City/yield-modifier';
 import { deriveBuildRules } from '@civ-clone/base-city-improvement-rules/lib/build';
@@ -35,11 +38,15 @@ export const register = (game: Game): void => {
       engine: game.engine,
       gameDifficultyRegistry: game.difficulty,
       interactionRegistry: game.interactions,
+      landMassRegistry: game.landMasses,
+      pendingEffectRegistry: game.pendingEffects,
+      playerRegistry: game.players,
       playerGovernmentRegistry: game.playerGovernments,
       playerTreasuryRegistry: game.playerTreasuries,
       randomNumberGenerator: game.rng,
       ruleRegistry: game.rules,
       tileImprovementRegistry: game.tileImprovements,
+      turn: game.turn,
       unitRegistry: game.units,
     };
 
@@ -60,14 +67,17 @@ export const register = (game: Game): void => {
     ...wonderExclusionRules(registries),
     ...cityBuildCost(),
     ...cityBuildPriority(dependencies),
+    ...cityCapitalization(),
     ...cityCaptured(dependencies, game.rng),
     ...cityCost(dependencies),
     ...cityCreated(game.cities, game.cityImprovements, game.rules),
     ...cityDestroyed(game.cityImprovements),
     ...cityGrow(registries),
     ...cityPollution(dependencies),
+    ...cityMeltdown(dependencies),
     ...cityPollutionDivisor(registries),
     ...cityImprovementCreated(game.cityImprovements, game.engine),
+    ...cityTileYield(dependencies),
     ...cityYield(dependencies),
     ...cityYieldModifier(registries),
     ...playerResearchComplete(

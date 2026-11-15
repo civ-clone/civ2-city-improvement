@@ -5,7 +5,7 @@ import registerAdditionalData from '../registerAdditionalData';
 import register from '../registerRules';
 
 describe('register', (): void => {
-  it("registers only civ2-city-improvement's rules, each with its own id, the 34 improvements and two data", (): void => {
+  it("registers only civ2-city-improvement's rules, each with its own id, the 34 improvements, Capitalization and two data", (): void => {
     const game = new Game();
 
     register(game);
@@ -16,7 +16,7 @@ describe('register', (): void => {
     expect(ids).not.empty;
     ids.forEach((id) => expect(id).match(/^civ2-city-improvement:/));
     expect(new Set(ids).size).equal(ids.length);
-    expect(game.availableCityBuildItems.entries()).length(34);
+    expect(game.availableCityBuildItems.entries()).length(35);
     expect(game.additionalData.entries()).length(2);
   });
 

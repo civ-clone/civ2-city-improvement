@@ -22,6 +22,7 @@ import { Monarchy } from '@civ-clone/civ2-government/Governments';
 import PlayerTradeRates from '@civ-clone/core-trade-rate/PlayerTradeRates';
 import PlayerTradeRatesRegistry from '@civ-clone/core-trade-rate/PlayerTradeRatesRegistry';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
+import civ2CityCorruption from '@civ-clone/civ2-city/Rules/City/corruption';
 import civ2CityGrow from '@civ-clone/civ2-city/Rules/City/grow';
 import civ2CityYield from '@civ-clone/civ2-city/Rules/City/yield';
 import civ2TradeRateYield from '@civ-clone/civ2-trade-rate/Rules/City/yield';
@@ -71,12 +72,21 @@ describe('with civ2-city and civ2-trade-rate', (): void => {
           { getByCity: () => [] } as any,
           atLevel(3),
           playedBy()
-        ).filter((rule) =>
-          [
-            'civ2-city:city/yield/corruption',
-            'civ2-city:city/yield/worked-tiles',
-          ].includes(rule.id())
-        ),
+        ).filter((rule) => rule.id() === 'civ2-city:city/yield/worked-tiles'),
+        // civ2-city's corruption, 16 squares from the Palace.
+        ...civ2CityCorruption({
+          clientRegistry: playedBy(),
+          gameDifficultyRegistry: atLevel(3),
+          pendingEffectRegistry: { getByTarget: () => [] } as any,
+          playerGovernmentRegistry: governedBy(Monarchy),
+          capitalLink: {
+            capital: () => ({ distance: 16, nearest: capital }),
+            has: (target: City, Improvement: any) =>
+              r.cityImprovementRegistry
+                .getByCity(target)
+                .some((improvement) => improvement instanceof Improvement),
+          } as any,
+        }).filter((rule) => rule.id() === 'civ2-city:city/yield/corruption'),
         ...civ2TradeRateYield(availableTradeRates, playerTradeRates),
         ...yieldRules({ ...r, playerGovernmentRegistry: governedBy(Monarchy) }),
         ...yieldModifiers(r)

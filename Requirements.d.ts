@@ -4,6 +4,8 @@ import {
 } from '@civ-clone/core-requirement/Requirement';
 /** The advance a city's player needs before it can build each improvement (@IMPROVE's fourth column). */
 export declare const requiresAdvance: Requirement[];
+/** Capitalization (@IMPROVE row 38) needs The Corporation. */
+export declare const capitalizationRequires: Requirement[];
 /** The improvements a city needs, any one of, before it can build each improvement. */
 export declare const requiresImprovement: Requirement[];
 /**

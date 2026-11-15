@@ -21,7 +21,9 @@ import {
   Requirement,
   table,
 } from '@civ-clone/core-requirement/Requirement';
+import Capitalization from '@civ-clone/base-city-improvement-capitalization/Capitalization';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
+import { Corporation } from '@civ-clone/civ2-science/Advances';
 import improvements from './data/improvements';
 
 // What Civilization II's city improvements need, and what stops a city building them (OpenCiv2 `src/auto/city.cpp`
@@ -34,6 +36,13 @@ export const requiresAdvance: Requirement[] = table(
   improvements
     .filter(([, , , Advance]) => Advance !== null)
     .map(([Improvement, , , Advance]) => [Improvement, Advance!])
+);
+
+/** Capitalization (@IMPROVE row 38) needs The Corporation. */
+export const capitalizationRequires: Requirement[] = table(
+  'civ2-city-improvement:city/build/requires-advance',
+  'requires',
+  [[Capitalization, Corporation]]
 );
 
 /** The improvements a city needs, any one of, before it can build each improvement. */
@@ -86,6 +95,7 @@ export const notBuilt = new Requirement({
 /** The entries `Rules/City/build`'s deriver makes rules from. */
 export const buildRequirements: Requirement[] = [
   ...requiresAdvance,
+  ...capitalizationRequires,
   ...requiresImprovement,
   ...excludedBy,
 ];

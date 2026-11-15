@@ -12,6 +12,7 @@ import {
 } from '@civ-clone/core-city-growth/CityGrowthRegistry';
 import { MassTransit, SolarPlant } from '../CityImprovements';
 import { Production, UnitSupportProduction } from '../Yields';
+import { Waste } from '@civ-clone/civ2-city/Yields';
 import { Registries, withDefaults } from './source';
 import {
   RuleRegistry,
@@ -99,7 +100,8 @@ export const pollution = (
         city,
         cityYields,
         Production,
-        [UnitSupportProduction],
+        // Before support and waste (`city_calc_shields_pollution` ~3435, which takes the waste off after).
+        [UnitSupportProduction, Waste],
         ruleRegistry
       ) - pollutionTolerance) +
   populationPollution(

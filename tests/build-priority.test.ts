@@ -37,10 +37,10 @@ describe('city:build-priority', (): void => {
       })
     );
 
-    const priority = (city: City, Item: unknown): number[] =>
+    const priority = (city: City, Item: unknown, auto = false): number[] =>
       ruleRegistry.process(
         BuildPriority,
-        instanceOf(CityBuild, { city: () => city }),
+        instanceOf(CityBuild, { city: () => city, auto: () => auto }),
         Item as any,
         []
       ) as number[];
@@ -64,5 +64,12 @@ describe('city:build-priority', (): void => {
 
     expect(priority(large, SewerSystem)[0]).greaterThan(0);
     expect(priority(small, SewerSystem)).eql([0]);
+  });
+
+  it("says nothing for a city on Auto, which civ2-city's own Civ2 scores rank", (): void => {
+    const { large, priority } = setUp();
+
+    expect(priority(large, Palace, true)).eql([]);
+    expect(priority(large, SewerSystem, true)).eql([]);
   });
 });

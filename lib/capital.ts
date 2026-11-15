@@ -21,6 +21,10 @@ import {
   instance as gameDifficultyRegistryInstance,
 } from '@civ-clone/core-difficulty/GameDifficultyRegistry';
 import {
+  LandMassRegistry,
+  instance as landMassRegistryInstance,
+} from '@civ-clone/core-world/LandMassRegistry';
+import {
   PlayerTreasuryRegistry,
   instance as playerTreasuryRegistryInstance,
 } from '@civ-clone/core-treasury/PlayerTreasuryRegistry';
@@ -52,6 +56,7 @@ import { levelOf } from '@civ-clone/civ2-difficulty/level';
 
 export interface CapitalDependencies extends Registries {
   cityGrowthRegistry?: CityGrowthRegistry;
+  landMassRegistry?: LandMassRegistry;
   cityRegistry?: CityRegistry;
   clientRegistry?: ClientRegistry;
   gameDifficultyRegistry?: GameDifficultyRegistry;
@@ -78,15 +83,23 @@ const goldTreasury = (
     .getByPlayer(player)
     .find((treasury: PlayerTreasury): boolean => treasury.yield() === Gold);
 
+/** How much gold `player` has. */
+export const goldOf = (
+  player: Player,
+  {
+    playerTreasuryRegistry = playerTreasuryRegistryInstance,
+  }: CapitalDependencies = {}
+): number => goldTreasury(player, playerTreasuryRegistry)?.value() ?? 0;
+
 /**
- * Where a computer player whose capital was just taken moves its Palace, if it does (OpenCiv2 `src/auto/city.cpp`
- *  `city_capture_aftermath_palace_escape`, richardpenman/civ2@49f26ec): only above Prince, with more than 999 gold, and
- *  more than 11 cities or more than 1999 gold, into its best city of size 8 or more and at least half the captured
- *  city's size. A city scores 3 a citizen, less its distance from the captured city, plus 4 for each point of defence
- *  on its square; × 1.5 with a SAM Missile Battery, × 2 with City Walls (or the Great Wall) and × 3 with an SDI Defense.
- *  `null` when it doesn't.
+ * The city `loser`'s Palace could escape to once its capital is taken (OpenCiv2 `src/auto/city.cpp`
+ *  `city_capture_aftermath_palace_escape` ~4717, richardpenman/civ2@49f26ec), whoever plays it: its best city of size 8
+ *  or more and at least half the captured city's size. A city scores 3 a citizen, less its distance from the captured
+ *  city, plus 4 for each point of defence on its square; then, each with C's integer arithmetic, × 3 / 2 with a SAM
+ *  Missile Battery, × 2 with City Walls (or the Great Wall), × 3 with an SDI Defense, and / 2 on another land mass. The
+ *  first best score wins. `null` when no city qualifies.
  */
-export const palaceEscape = (
+export const palaceEscapeCandidate = (
   captured: City,
   loser: Player,
   dependencies: CapitalDependencies = {}
@@ -94,37 +107,22 @@ export const palaceEscape = (
   const {
       cityGrowthRegistry = cityGrowthRegistryInstance,
       cityRegistry = cityRegistryInstance,
-      clientRegistry = clientRegistryInstance,
-      gameDifficultyRegistry = gameDifficultyRegistryInstance,
-      playerTreasuryRegistry = playerTreasuryRegistryInstance,
+      landMassRegistry = landMassRegistryInstance,
       unitRegistry = unitRegistryInstance,
     } = dependencies,
     registries = withDefaults(dependencies),
-    treasury = goldTreasury(loser, playerTreasuryRegistry),
-    gold = treasury?.value() ?? 0,
-    cities = cityRegistry
-      .getByPlayer(loser)
-      .filter((city: City): boolean => city !== captured);
-
-  if (
-    isHuman(loser, clientRegistry) ||
-    levelOf(gameDifficultyRegistry) <= palaceEscapeAboveLevel ||
-    gold < palaceEscapeCost ||
-    !(cities.length > palaceEscapeCities || gold > palaceEscapeGold)
-  ) {
-    return null;
-  }
-
-  const size = (city: City): number =>
-      cityGrowthRegistry.getByCity(city).size(),
-    capturedSize = size(captured);
+    size = (city: City): number => cityGrowthRegistry.getByCity(city).size(),
+    capturedSize = size(captured),
+    capturedLandMass = landMassRegistry.getByTile(captured.tile());
 
   let best: City | null = null,
-    bestScore = -Infinity;
+    bestScore = -999;
 
-  cities
+  cityRegistry
+    .getByPlayer(loser)
     .filter(
       (city: City): boolean =>
+        city !== captured &&
         size(city) >= palaceEscapeMinimumSize &&
         size(city) >= Math.trunc(capturedSize / 2)
     )
@@ -148,7 +146,7 @@ export const palaceEscape = (
           registries.cityImprovementRegistry
         )
       ) {
-        score = (score * 3) / 2;
+        score = Math.trunc((score * 3) / 2);
       }
 
       if (hasEither(city, CityWalls, GreatWall, registries)) {
@@ -159,6 +157,10 @@ export const palaceEscape = (
         score *= 3;
       }
 
+      if (landMassRegistry.getByTile(city.tile()) !== capturedLandMass) {
+        score = Math.trunc(score / 2);
+      }
+
       if (score > bestScore) {
         bestScore = score;
         best = city;
@@ -166,6 +168,38 @@ export const palaceEscape = (
     });
 
   return best;
+};
+
+/**
+ * Where a computer player whose capital was just taken moves its Palace, if it does (`city_capture_aftermath_palace_escape`):
+ *  with more than 999 gold, to `palaceEscapeCandidate`'s city, and only above Prince, with more than 11 cities or more
+ *  than 1999 gold. `null` when it doesn't. A person is asked instead (`lib/palaceEscapeOffer`).
+ */
+export const palaceEscape = (
+  captured: City,
+  loser: Player,
+  dependencies: CapitalDependencies = {}
+): City | null => {
+  const {
+      cityRegistry = cityRegistryInstance,
+      clientRegistry = clientRegistryInstance,
+      gameDifficultyRegistry = gameDifficultyRegistryInstance,
+    } = dependencies,
+    gold = goldOf(loser, dependencies),
+    cities = cityRegistry
+      .getByPlayer(loser)
+      .filter((city: City): boolean => city !== captured);
+
+  if (
+    isHuman(loser, clientRegistry) ||
+    levelOf(gameDifficultyRegistry) <= palaceEscapeAboveLevel ||
+    gold < palaceEscapeCost ||
+    !(cities.length > palaceEscapeCities || gold > palaceEscapeGold)
+  ) {
+    return null;
+  }
+
+  return palaceEscapeCandidate(captured, loser, dependencies);
 };
 
 /** Moves `loser`'s Palace to `city` for `palaceEscapeCost` gold. */
