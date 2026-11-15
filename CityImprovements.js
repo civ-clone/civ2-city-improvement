@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PortFacility = exports.PoliceStation = exports.Airport = exports.OffshorePlatform = exports.Harbour = exports.SolarPlant = exports.CoastalFortress = exports.SamMissileBattery = exports.ResearchLab = exports.Superhighways = exports.Supermarket = exports.SewerSystem = exports.StockExchange = exports.NuclearPlant = exports.HydroPlant = exports.PowerPlant = exports.RecyclingCenter = exports.SdiDefence = exports.ManufacturingPlant = exports.Factory = exports.Colosseum = exports.MassTransit = exports.University = exports.Cathedral = exports.Bank = exports.Aqueduct = exports.CityWalls = exports.Courthouse = exports.Library = exports.Marketplace = exports.Temple = exports.Granary = exports.Barracks = exports.Palace = void 0;
-// Civilization II's 34 buildable improvements, in RULES.TXT @IMPROVE order (rows 1 to 34; the spaceship parts and
-//  Capitalization aren't in M2a). Each is its own class-only base package, shared with any ruleset that has it.
+// Civilization II's 34 buildable improvements, in RULES.TXT @IMPROVE order (rows 1 to 34; the spaceship parts aren't
+//  here yet, and Capitalization, row 38, is base-city-improvement-capitalization's own class: `Rules/City/capitalization`).
+//  Each is its own class-only base package, shared with any ruleset that has it.
 var Palace_1 = require("@civ-clone/base-city-improvement-palace/Palace");
 Object.defineProperty(exports, "Palace", { enumerable: true, get: function () { return Palace_1.Palace; } });
 var Barracks_1 = require("@civ-clone/base-city-improvement-barracks/Barracks");

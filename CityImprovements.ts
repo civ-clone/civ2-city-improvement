@@ -1,5 +1,6 @@
-// Civilization II's 34 buildable improvements, in RULES.TXT @IMPROVE order (rows 1 to 34; the spaceship parts and
-//  Capitalization aren't in M2a). Each is its own class-only base package, shared with any ruleset that has it.
+// Civilization II's 34 buildable improvements, in RULES.TXT @IMPROVE order (rows 1 to 34; the spaceship parts aren't
+//  here yet, and Capitalization, row 38, is base-city-improvement-capitalization's own class: `Rules/City/capitalization`).
+//  Each is its own class-only base package, shared with any ruleset that has it.
 export { Palace } from '@civ-clone/base-city-improvement-palace/Palace';
 export { Barracks } from '@civ-clone/base-city-improvement-barracks/Barracks';
 export { Granary } from '@civ-clone/base-city-improvement-granary/Granary';
