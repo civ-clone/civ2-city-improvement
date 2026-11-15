@@ -40,9 +40,11 @@ citing its function. Other numbers are in `data/rules.ts`.
 ## Not yet (Civ2 M2a deviations and gaps)
 
 - **Supermarket:** farmland is inert until G20, so the Supermarket does nothing.
-- **Airport airlifts, Superhighways and Airport trade route bonuses** (no trade routes in M2a), the Police Station's
-  exemption (civ2-city-happiness#2, by the same "improvement or Wonder" test), and the **SDI Defense's protection from
-  nuclear attack** (civ2-unit's detonation has no veto for it yet).
+- **Superhighways and Airport trade route bonuses** (no trade routes in M2a), and the Police Station's exemption
+  (civ2-city-happiness#2, by the same "improvement or Wonder" test).
+- **Not here, by design:** what Barracks, an Airport and a Port Facility do for a damaged unit (a full heal), an
+  Airport's airlifts, and SDI Defense stopping a nuclear attack within 3 squares are civ2-unit's rules, which ask for
+  the improvements' base classes, so civ2-unit doesn't depend on this package.
 - **Squares:** Harbour, Offshore Platform and Superhighways add to the city's totals rather than each square's yield, so
   they come before the government's square penalty rather than after.
 - **Capture:** a city retaken by its founder loses its Palace too (Civ2 leaves the bit, giving the founder a second);
