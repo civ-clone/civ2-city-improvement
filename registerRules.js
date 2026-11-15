@@ -38,6 +38,7 @@ const register = (game) => {
         engine: game.engine,
         gameDifficultyRegistry: game.difficulty,
         interactionRegistry: game.interactions,
+        landMassRegistry: game.landMasses,
         playerGovernmentRegistry: game.playerGovernments,
         playerTreasuryRegistry: game.playerTreasuries,
         randomNumberGenerator: game.rng,

@@ -19,7 +19,7 @@ import InciteRevolt from '@civ-clone/base-unit-action-incite-revolt/InciteRevolt
 import Engine from '@civ-clone/core-engine/Engine';
 import improvementCreated from '../Rules/CityImprovement/created';
 import { expect } from 'chai';
-import { palaceEscape } from '../lib/capital';
+import { palaceEscape, palaceEscapeCandidate } from '../lib/capital';
 
 const tile = (x: number) => ({
   x,
@@ -32,16 +32,18 @@ const world = ({
   cities = 12,
   human = false,
   capturedSize = 10,
+  loser = 'loser' as unknown,
 }: {
   level?: number;
   gold?: number;
   cities?: number;
   human?: boolean;
   capturedSize?: number;
+  loser?: unknown;
 } = {}) => {
   const r = registries(),
     sizes = new Map<City, number>(),
-    captive = cityOf('loser', { tile: () => tile(0) }),
+    captive = cityOf(loser, { tile: () => tile(0) }),
     others: City[] = [],
     treasury = {
       value: () => gold,
@@ -52,7 +54,7 @@ const world = ({
   sizes.set(captive, capturedSize);
 
   for (let i = 1; i <= cities; i++) {
-    const city = cityOf('loser', { tile: () => tile(i) });
+    const city = cityOf(loser, { tile: () => tile(i) });
 
     sizes.set(
       city,
@@ -67,7 +69,7 @@ const world = ({
       getByCity: (city: City) => ({ size: () => sizes.get(city) }),
     } as any,
     cityRegistry: { getByPlayer: () => [captive, ...others] } as any,
-    clientRegistry: playedBy(...(human ? ['loser'] : [])),
+    clientRegistry: playedBy(...(human ? [loser] : [])),
     gameDifficultyRegistry: atLevel(level),
     playerTreasuryRegistry: { getByPlayer: () => [treasury] } as any,
     unitRegistry: { getByTile: () => [] } as any,
@@ -110,6 +112,112 @@ describe('lib/capital: palaceEscape', (): void => {
 
     expect(palaceEscape(rich.captive, 'loser' as any, rich.dependencies)).not
       .null;
+  });
+});
+
+describe('lib/capital: palaceEscapeCandidate', (): void => {
+  it('halves the score of a city on another land mass (city_capture_aftermath_palace_escape ~4757)', (): void => {
+    const { captive, dependencies, others } = world(),
+      home = {},
+      away = {};
+
+    // City 3 (size 12, 3 away) scores 33, city 5 (size 9, 5 away) 22; city 3 on another land mass, 16.
+    expect(
+      palaceEscapeCandidate(captive, 'loser' as any, {
+        ...dependencies,
+        landMassRegistry: {
+          getByTile: (tile: any) => (tile.x === 3 ? away : home),
+        } as any,
+      })
+    ).equal(others[4]);
+  });
+
+  it("is the same for a person, with none of the computer player's conditions but the gold", (): void => {
+    const { captive, dependencies, others } = world({
+      human: true,
+      level: 0,
+      cities: 5,
+    });
+
+    expect(palaceEscape(captive, 'loser' as any, dependencies)).null;
+    expect(palaceEscapeCandidate(captive, 'loser' as any, dependencies)).equal(
+      others[2]
+    );
+  });
+});
+
+describe("city:captured, a person's Palace escape", (): void => {
+  const setUp = (gold: number, answer: boolean) => {
+    const loser = { name: 'loser' } as any,
+      {
+        captive,
+        dependencies,
+        gold: goldLeft,
+        others,
+        r,
+      } = world({
+        human: true,
+        level: 0,
+        cities: 5,
+        gold,
+        loser,
+      }),
+      ruleRegistry = new RuleRegistry(),
+      asked: any[] = [],
+      waited: Promise<unknown>[] = [],
+      all = {
+        ...dependencies,
+        ruleRegistry,
+        clientRegistry: {
+          ...playedBy(loser),
+          getByPlayer: () => ({
+            chooseFromList: async (meta: any) => {
+              asked.push(meta);
+
+              return answer;
+            },
+          }),
+        } as any,
+        waitBeforePlunder: (city: City, pending: Promise<unknown>) =>
+          waited.push(pending),
+      };
+
+    r.cityImprovementRegistry.register(built(Palace, captive));
+    ruleRegistry.register(
+      ...improvementCreated(r.cityImprovementRegistry, new Engine()),
+      ...captured(all, () => 0.9)
+    );
+    ruleRegistry.process(Captured, captive, 'taker' as any, loser, null);
+
+    return { asked, captive, goldLeft, others, r, waited };
+  };
+
+  it('asks them at the capture, plunder waits for the answer, and yes pays 1000 and moves the Palace', async (): Promise<void> => {
+    const { asked, goldLeft, others, r, waited } = setUp(1500, true);
+
+    expect(asked).length(1);
+    expect(asked[0].key()).equal('capture-city.palace-escape');
+    expect(asked[0].data().city === others[2]).true;
+    expect(asked[0].data().cost).equal(1000);
+    expect(waited).length(1);
+    expect(await waited[0]).true;
+    expect(
+      r.cityImprovementRegistry.getByType(Palace).map((p) => p.city())
+    ).eql([others[2]]);
+    expect(goldLeft()).equal(500);
+  });
+
+  it('no leaves the Palace lost and the gold for plunder; with no more than 999 gold they are not asked', async (): Promise<void> => {
+    const declined = setUp(1500, false);
+
+    expect(await declined.waited[0]).false;
+    expect(declined.r.cityImprovementRegistry.getByType(Palace)).eql([]);
+    expect(declined.goldLeft()).equal(1500);
+
+    const poor = setUp(999, true);
+
+    expect(poor.asked).eql([]);
+    expect(poor.waited).eql([]);
   });
 });
 
