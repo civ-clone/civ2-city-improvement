@@ -59,15 +59,15 @@ citing its function. Other numbers are in `data/rules.ts`.
 
 ## Not yet (Civ2 M2a deviations and gaps)
 
-- **Superhighways and Airport trade route bonuses** (no trade routes in M2a), and the Police Station's exemption
-  (civ2-city-happiness#2, by the same "improvement or Wonder" test).
+- **Superhighways and Airport trade route bonuses** (no trade routes yet). The Police Station's exemption from
+  military unhappiness is civ2-city-happiness's.
 - **Not here, by design:** what Barracks, an Airport and a Port Facility do for a damaged unit (a full heal), an
   Airport's airlifts, and SDI Defense stopping a nuclear attack within 3 squares are civ2-unit's rules, which ask for
   the improvements' base classes, so civ2-unit doesn't depend on this package.
 - **Capture:** the founder a capture spares is civ2-city's (`lib/founder`: the loser of the last capture, or the owner
   after 63 turns). A city retaken by its founder loses its Palace too (Civ2 leaves the bit, giving the founder a second);
   the escape's spaceship condition isn't modelled, nor the original skipping its first city slot (`0 < city3`).
-- **Communism's veteran Diplomats** (`city_process_production_unit`) aren't modelled.
+- **Communism's veteran Diplomats** (`city_process_production_unit`) are civ2-unit's.
 - **The Palace escape** counts the loser's cities and the captured city's size after civ2-city's capture rules have run
   (Civ2 counts before), and measures distance by the world's own metric rather than Civ2's diagonal one, so it can be
   one off at its thresholds.
