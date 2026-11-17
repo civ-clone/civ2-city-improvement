@@ -34,6 +34,10 @@ import {
   instance as ruleRegistryInstance,
 } from '@civ-clone/core-rule/RuleRegistry';
 import {
+  SpaceshipRegistry,
+  instance as spaceshipRegistryInstance,
+} from '@civ-clone/core-spaceship/SpaceshipRegistry';
+import {
   UnitRegistry,
   instance as unitRegistryInstance,
 } from '@civ-clone/core-unit/UnitRegistry';
@@ -51,6 +55,7 @@ import Player from '@civ-clone/core-player/Player';
 import PlayerTreasury from '@civ-clone/core-treasury/PlayerTreasury';
 import Unit from '@civ-clone/core-unit/Unit';
 import { improvementOf } from '@civ-clone/base-city-improvement-rules/lib/has';
+import { hasSpaceship } from '@civ-clone/civ2-spaceship/lib/ship';
 import isHuman from '@civ-clone/civ2-difficulty/isHuman';
 import { levelOf } from '@civ-clone/civ2-difficulty/level';
 
@@ -62,6 +67,7 @@ export interface CapitalDependencies extends Registries {
   gameDifficultyRegistry?: GameDifficultyRegistry;
   playerTreasuryRegistry?: PlayerTreasuryRegistry;
   ruleRegistry?: RuleRegistry;
+  spaceshipRegistry?: SpaceshipRegistry;
   unitRegistry?: UnitRegistry;
 }
 
@@ -172,8 +178,8 @@ export const palaceEscapeCandidate = (
 
 /**
  * Where a computer player whose capital was just taken moves its Palace, if it does (`city_capture_aftermath_palace_escape`):
- *  with more than 999 gold, to `palaceEscapeCandidate`'s city, and only above Prince, with more than 11 cities or more
- *  than 1999 gold. `null` when it doesn't. A person is asked instead (`lib/palaceEscapeOffer`).
+ *  with more than 999 gold, to `palaceEscapeCandidate`'s city, and only above Prince, with a spaceship (civ2-spaceship's
+ *  `hasSpaceship`: parts built, or launched), more than 11 cities or more than 1999 gold. `null` when it doesn't. A person is asked instead (`lib/palaceEscapeOffer`).
  */
 export const palaceEscape = (
   captured: City,
@@ -184,6 +190,7 @@ export const palaceEscape = (
       cityRegistry = cityRegistryInstance,
       clientRegistry = clientRegistryInstance,
       gameDifficultyRegistry = gameDifficultyRegistryInstance,
+      spaceshipRegistry = spaceshipRegistryInstance,
     } = dependencies,
     gold = goldOf(loser, dependencies),
     cities = cityRegistry
@@ -194,7 +201,11 @@ export const palaceEscape = (
     isHuman(loser, clientRegistry) ||
     levelOf(gameDifficultyRegistry) <= palaceEscapeAboveLevel ||
     gold < palaceEscapeCost ||
-    !(cities.length > palaceEscapeCities || gold > palaceEscapeGold)
+    !(
+      hasSpaceship(loser, spaceshipRegistry) ||
+      cities.length > palaceEscapeCities ||
+      gold > palaceEscapeGold
+    )
   ) {
     return null;
   }

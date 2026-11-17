@@ -106,7 +106,7 @@ describe('lib/capital: palaceEscape', (): void => {
     );
   });
 
-  it('only above Prince, with 1000 gold, and more than 11 cities or 2000 gold, and never for a person', (): void => {
+  it('only above Prince, with 1000 gold, and a spaceship, more than 11 cities or 2000 gold, and never for a person', (): void => {
     [
       world({ level: 2 }),
       world({ gold: 999 }),
@@ -121,6 +121,35 @@ describe('lib/capital: palaceEscape', (): void => {
 
     expect(palaceEscape(rich.captive, 'loser' as any, rich.dependencies)).not
       .null;
+
+    // Or with a spaceship, parts built or launched (`civ_spaceship_exists`, city.cpp ~4787).
+    const shipOwner = world({ cities: 11 }),
+      ship = (launched: boolean, parts: boolean) =>
+        ({
+          getActiveByPlayer: () => ({
+            launched: () => launched,
+            layout: () => ({ slots: () => [{ empty: () => !parts }] }),
+          }),
+        } as any);
+
+    expect(
+      palaceEscape(shipOwner.captive, 'loser' as any, {
+        ...shipOwner.dependencies,
+        spaceshipRegistry: ship(false, true),
+      })
+    ).not.null;
+    expect(
+      palaceEscape(shipOwner.captive, 'loser' as any, {
+        ...shipOwner.dependencies,
+        spaceshipRegistry: ship(true, false),
+      })
+    ).not.null;
+    expect(
+      palaceEscape(shipOwner.captive, 'loser' as any, {
+        ...shipOwner.dependencies,
+        spaceshipRegistry: ship(false, false),
+      })
+    ).null;
   });
 });
 

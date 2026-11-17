@@ -14,7 +14,7 @@ citing its function. Other numbers are in `data/rules.ts`.
 - **The Palace** (`Rules/City/created`, `Rules/CityImprovement/created`, `Rules/City/captured`, `lib/capital`): a
   civilization's only city gets it; building another moves it; it can't be sold (civ2-treasury); a captured capital
   loses it, and its player may buy it into its best city for 1000 gold (`city_capture_aftermath_palace_escape`): a
-  computer player decides by itself; a person's client is asked there and then (`lib/palaceEscapeChoice`,
+  computer player decides by itself (above Prince, with a spaceship, more than 11 cities or more than 1999 gold); a person's client is asked there and then (`lib/palaceEscapeChoice`,
   `capture-city.palace-escape`, yes or no, with the city and the cost), and the capture's plunder waits for the
   answer, as Civ2 pays for the escape before plunder (through civ2-city's `waitBeforePlunder`).
   civ2-city measures corruption from it. A computer player without one rebuilds it in its largest city
@@ -81,7 +81,7 @@ citing its function. Other numbers are in `data/rules.ts`.
   the improvements' base classes, so civ2-unit doesn't depend on this package.
 - **Capture:** the founder a capture spares is civ2-city's (`lib/founder`: the loser of the last capture, or the owner
   after 63 turns). A city retaken by its founder loses its Palace too (Civ2 leaves the bit, giving the founder a second);
-  the escape's spaceship condition isn't modelled, nor the original skipping its first city slot (`0 < city3`).
+  nor the original skipping its first city slot (`0 < city3`).
 - **Communism's veteran Diplomats** (`city_process_production_unit`) are civ2-unit's.
 - **The Palace escape** counts the loser's cities and the captured city's size after civ2-city's capture rules have run
   (Civ2 counts before), and measures distance by the world's own metric rather than Civ2's diagonal one, so it can be

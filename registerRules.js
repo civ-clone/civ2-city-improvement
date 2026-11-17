@@ -46,6 +46,7 @@ const register = (game) => {
         playerTreasuryRegistry: game.playerTreasuries,
         randomNumberGenerator: game.rng,
         ruleRegistry: game.rules,
+        spaceshipRegistry: game.spaceships,
         tileImprovementRegistry: game.tileImprovements,
         turn: game.turn,
         unitRegistry: game.units,

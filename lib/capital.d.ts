@@ -6,6 +6,7 @@ import { LandMassRegistry } from '@civ-clone/core-world/LandMassRegistry';
 import { PlayerTreasuryRegistry } from '@civ-clone/core-treasury/PlayerTreasuryRegistry';
 import { Registries } from './source';
 import { RuleRegistry } from '@civ-clone/core-rule/RuleRegistry';
+import { SpaceshipRegistry } from '@civ-clone/core-spaceship/SpaceshipRegistry';
 import { UnitRegistry } from '@civ-clone/core-unit/UnitRegistry';
 import City from '@civ-clone/core-city/City';
 import Player from '@civ-clone/core-player/Player';
@@ -17,6 +18,7 @@ export interface CapitalDependencies extends Registries {
   gameDifficultyRegistry?: GameDifficultyRegistry;
   playerTreasuryRegistry?: PlayerTreasuryRegistry;
   ruleRegistry?: RuleRegistry;
+  spaceshipRegistry?: SpaceshipRegistry;
   unitRegistry?: UnitRegistry;
 }
 /** `player`'s standing Palace's city, or `null`. */
@@ -44,8 +46,8 @@ export declare const palaceEscapeCandidate: (
 ) => City | null;
 /**
  * Where a computer player whose capital was just taken moves its Palace, if it does (`city_capture_aftermath_palace_escape`):
- *  with more than 999 gold, to `palaceEscapeCandidate`'s city, and only above Prince, with more than 11 cities or more
- *  than 1999 gold. `null` when it doesn't. A person is asked instead (`lib/palaceEscapeOffer`).
+ *  with more than 999 gold, to `palaceEscapeCandidate`'s city, and only above Prince, with a spaceship (civ2-spaceship's
+ *  `hasSpaceship`: parts built, or launched), more than 11 cities or more than 1999 gold. `null` when it doesn't. A person is asked instead (`lib/palaceEscapeOffer`).
  */
 export declare const palaceEscape: (
   captured: City,
