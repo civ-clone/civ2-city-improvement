@@ -81,7 +81,7 @@ citing its function. Other numbers are in `data/rules.ts`.
   the improvements' base classes, so civ2-unit doesn't depend on this package.
 - **Capture:** the founder a capture spares is civ2-city's (`lib/founder`: the loser of the last capture, or the owner
   after 63 turns). A city retaken by its founder loses its Palace too (Civ2 leaves the bit, giving the founder a second);
-  nor the original skipping its first city slot (`0 < city3`).
+  the original skipping its first city slot (`0 < city3`) isn't modelled.
 - **Communism's veteran Diplomats** (`city_process_production_unit`) are civ2-unit's.
 - **The Palace escape** counts the loser's cities and the captured city's size after civ2-city's capture rules have run
   (Civ2 counts before), and measures distance by the world's own metric rather than Civ2's diagonal one, so it can be
