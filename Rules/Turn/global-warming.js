@@ -41,6 +41,13 @@ const getRules = ({ cityImprovementRegistry = CityImprovementRegistry_1.instance
             ruleRegistry,
             tileImprovementRegistry,
             turn,
+            // The world a warming changes: the cities', or with none, the pollution's.
+            world: () => {
+                var _a, _b, _c;
+                return (_c = (_b = ((_a = cityRegistry.entries().find((city) => !city.destroyed())) !== null && _a !== void 0 ? _a : tileImprovementRegistry
+                    .entries()
+                    .find((improvement) => improvement instanceof TileImprovements_1.Pollution))) === null || _b === void 0 ? void 0 : _b.tile().map()) !== null && _c !== void 0 ? _c : null;
+            },
         });
     })),
     // `polluted − w + w / 2`: `w` counts a polluted square once for each computer player's city that has it in its radius.

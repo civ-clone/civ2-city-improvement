@@ -114,6 +114,16 @@ export const getRules = ({
         ruleRegistry,
         tileImprovementRegistry,
         turn,
+        // The world a warming changes: the cities', or with none, the pollution's.
+        world: () =>
+          (
+            cityRegistry.entries().find((city) => !city.destroyed()) ??
+            tileImprovementRegistry
+              .entries()
+              .find((improvement) => improvement instanceof Pollution)
+          )
+            ?.tile()
+            .map() ?? null,
       });
     })
   ),

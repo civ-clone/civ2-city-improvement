@@ -64,9 +64,13 @@ export const getRules = (
       new Criterion((city: City): boolean =>
         standing(city).some((improvement) => improvement instanceof Palace)
       ),
-      // A civil war that couldn't break out leaves no escape (`lib/capital`'s `barPalaceEscape`).
-      new Criterion((city: City): boolean => !palaceEscapeBarred(city)),
       new Effect((city: City, capturer: Player, loser: Player): void => {
+        // A civil war that couldn't break out leaves no escape (`lib/capital`'s `barPalaceEscape`). Asked here, not as a
+        //  `Criterion`: every rule's criteria are asked before any effect runs, and the civil war's is an effect.
+        if (palaceEscapeBarred(city)) {
+          return;
+        }
+
         if (!isHuman(loser, clientRegistry)) {
           const escape = palaceEscape(city, loser, dependencies);
 
