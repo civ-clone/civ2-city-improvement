@@ -225,9 +225,12 @@ export const barPalaceEscape = (captured: City): void => {
   barred.add(captured);
 };
 
-/** Whether `captured`'s Palace may not escape (`barPalaceEscape`). */
+/**
+ * Whether `captured`'s Palace may not escape (`barPalaceEscape`), for this capture only: asking clears the bar, so a later
+ *  capture of the same city offers the escape again.
+ */
 export const palaceEscapeBarred = (captured: City): boolean =>
-  barred.has(captured);
+  barred.delete(captured);
 
 /** Moves `loser`'s Palace to `city` for `palaceEscapeCost` gold. */
 export const escapeTo = (

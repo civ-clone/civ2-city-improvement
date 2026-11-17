@@ -307,6 +307,19 @@ describe('city:captured, the Palace escape', (): void => {
     expect(palace.destroyed()).true;
     expect(r.cityImprovementRegistry.getByType(Palace)).eql([]);
     expect(gold()).equal(1500);
+
+    // The bar is for that capture only: taken again with its Palace, the city offers the escape.
+    r.cityImprovementRegistry.register(built(Palace, captive));
+    ruleRegistry.process(
+      Captured,
+      captive,
+      'taker' as any,
+      'loser' as any,
+      null
+    );
+
+    expect(gold()).equal(500);
+    expect(r.cityImprovementRegistry.getByType(Palace)).length(1);
   });
 });
 

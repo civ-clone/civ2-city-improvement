@@ -60,7 +60,10 @@ export declare const palaceEscape: (
  *  escape then). For the civil war's `Captured` rule to call before this package's escape rule runs.
  */
 export declare const barPalaceEscape: (captured: City) => void;
-/** Whether `captured`'s Palace may not escape (`barPalaceEscape`). */
+/**
+ * Whether `captured`'s Palace may not escape (`barPalaceEscape`), for this capture only: asking clears the bar, so a later
+ *  capture of the same city offers the escape again.
+ */
 export declare const palaceEscapeBarred: (captured: City) => boolean;
 /** Moves `loser`'s Palace to `city` for `palaceEscapeCost` gold. */
 export declare const escapeTo: (

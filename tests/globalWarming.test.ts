@@ -13,6 +13,7 @@ import {
   GLOBAL_WARMING_WARNING,
 } from '@civ-clone/base-global-warming/lib/globalWarming';
 import {
+  Farmland,
   Irrigation,
   Mine,
   Pollution,
@@ -492,7 +493,7 @@ describe('global warming: the counter (game_update_global_warming)', (): void =>
     expect(events).to.deep.equal([]);
   });
 
-  it('changes the coast to Swamp and Jungle, taking irrigation and a mine with it, and dries the inland pattern', async (): Promise<void> => {
+  it('changes the coast to Swamp and Jungle, taking irrigation, farmland and a mine with it, and dries the inland pattern', async (): Promise<void> => {
     // (2, 4) has 8 oceans around it (east, south, south-east, south-west, each twice): coastal. (2, 3) is Forest with 4.
     const rows = landAt([
         [3, 4],
@@ -516,6 +517,7 @@ describe('global warming: the counter (game_update_global_warming)', (): void =>
           .some((improvement) => improvement instanceof Type);
 
     new Irrigation(coast, ruleRegistry);
+    new Farmland(coast, ruleRegistry);
     new Mine(coast, ruleRegistry);
     new Road(coast, ruleRegistry);
 
@@ -553,6 +555,7 @@ describe('global warming: the counter (game_update_global_warming)', (): void =>
     // The coast is Swamp, without its irrigation or mine; its road stays.
     expect(coast.terrain()).to.be.instanceOf(Swamp);
     expect(has(coast, Irrigation)).to.equal(false);
+    expect(has(coast, Farmland)).to.equal(false);
     expect(has(coast, Mine)).to.equal(false);
     expect(has(coast, Road)).to.equal(true);
     // The Forest at (2, 3) is inland and off the pattern ((3 × 5 − 9) & 7 = 6): it stays.
