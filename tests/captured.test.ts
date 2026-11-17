@@ -525,3 +525,110 @@ describe("city:captured, with civ2-city's founder", (): void => {
     expect(takes(a, c)).true;
   });
 });
+
+describe('city:captured, the spaceship (civ_spaceship_lost_notify, city.cpp ~4819)', (): void => {
+  const setUp = async ({
+    human = false,
+    level = 4,
+    gold = 1500,
+    cities = 12,
+    answer = true,
+    spendBeforeAnswering = 0,
+    barred = false,
+  } = {}) => {
+    const loser = { name: 'loser' } as any,
+      { captive, dependencies, r } = world({
+        human,
+        level,
+        cities,
+        gold,
+        loser,
+      }),
+      ruleRegistry = new RuleRegistry(),
+      ship = {
+        lost: 0,
+        launched: () => 1,
+        activeParts: () => [],
+        inactiveParts: () => [],
+        successful(this: { lost: number }) {
+          return this.lost > 0 ? false : null;
+        },
+        lose(this: { lost: number }) {
+          this.lost++;
+        },
+      },
+      waited: Promise<unknown>[] = [],
+      all = {
+        ...dependencies,
+        ruleRegistry,
+        spaceshipRegistry: {
+          getActiveByPlayer: () => (ship.successful() === null ? ship : null),
+        } as any,
+        clientRegistry: {
+          ...(human ? playedBy(loser) : playedBy()),
+          getByPlayer: () => ({
+            chooseFromList: async () => {
+              dependencies.playerTreasuryRegistry
+                .getByPlayer(loser)[0]
+                .subtract(spendBeforeAnswering);
+
+              return answer;
+            },
+          }),
+        } as any,
+        waitBeforePlunder: (city: City, pending: Promise<unknown>) =>
+          waited.push(pending),
+      };
+
+    r.cityImprovementRegistry.register(built(Palace, captive));
+    ruleRegistry.register(
+      ...improvementCreated(r.cityImprovementRegistry, new Engine()),
+      ...captured(all, () => 0.9)
+    );
+
+    if (barred) {
+      barPalaceEscape(captive);
+    }
+
+    ruleRegistry.process(Captured, captive, 'taker' as any, loser, null);
+    await Promise.allSettled(waited);
+
+    return {
+      escaped: r.cityImprovementRegistry.getByType(Palace).length > 0,
+      ship,
+    };
+  };
+
+  it("is kept when a computer player's Palace escapes, and lost when it doesn't", async (): Promise<void> => {
+    const escapes = await setUp(),
+      doesnt = await setUp({ level: 2 });
+
+    expect([escapes.escaped, escapes.ship.lost]).eql([true, 0]);
+    expect([doesnt.escaped, doesnt.ship.lost]).eql([false, 1]);
+  });
+
+  it('is lost for a person with less than 1000 gold, or no city to escape to', async (): Promise<void> => {
+    const poor = await setUp({ human: true, gold: 999 }),
+      // Sizes 7 and 4: none of 8 or more.
+      nowhere = await setUp({ human: true, cities: 2 });
+
+    expect([poor.escaped, poor.ship.lost]).eql([false, 1]);
+    expect([nowhere.escaped, nowhere.ship.lost]).eql([false, 1]);
+  });
+
+  it("is lost when a person says no, or can't pay when they answer, and kept when they pay", async (): Promise<void> => {
+    const no = await setUp({ human: true, answer: false }),
+      spent = await setUp({ human: true, spendBeforeAnswering: 600 }),
+      yes = await setUp({ human: true });
+
+    expect([no.escaped, no.ship.lost]).eql([false, 1]);
+    expect([spent.escaped, spent.ship.lost]).eql([false, 1]);
+    expect([yes.escaped, yes.ship.lost]).eql([true, 0]);
+  });
+
+  it("isn't lost here when a civil war barred the escape: the civil war loses it, once", async (): Promise<void> => {
+    const barred = await setUp({ barred: true });
+
+    expect([barred.escaped, barred.ship.lost]).eql([false, 0]);
+  });
+});

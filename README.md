@@ -16,7 +16,9 @@ citing its function. Other numbers are in `data/rules.ts`.
   loses it, and its player may buy it into its best city for 1000 gold (`city_capture_aftermath_palace_escape`): a
   computer player decides by itself (above Prince, with a spaceship, more than 11 cities or more than 1999 gold); a person's client is asked there and then (`lib/palaceEscapeChoice`,
   `capture-city.palace-escape`, yes or no, with the city and the cost), and the capture's plunder waits for the
-  answer, as Civ2 pays for the escape before plunder (through civ2-city's `waitBeforePlunder`).
+  answer, as Civ2 pays for the escape before plunder (through civ2-city's `waitBeforePlunder`). Whenever the Palace isn't saved
+  (no escape, too little gold, no city to move to, a no, or no longer the gold to pay), the player's spaceship is lost
+  (base-spaceship's `cancelSpaceship`, `civ_spaceship_lost_notify`).
   civ2-city measures corruption from it. A computer player without one rebuilds it in its largest city
   (`Rules/City/build-priority`). These rules of thumb rank only a computer player's own choices: a city on Auto is
   ranked by civ2-city's Civ2 scores.

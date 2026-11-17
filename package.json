@@ -94,6 +94,7 @@
     "@civ-clone/base-city-yield-unhappiness": "^0.1.1",
     "@civ-clone/base-city-yield-unit-support-production": "^0.1.2",
     "@civ-clone/base-global-warming": "^0.1.0",
+    "@civ-clone/base-spaceship": "^0.1.0",
     "@civ-clone/base-terrain-yield-food": "^0.1.0",
     "@civ-clone/base-terrain-yield-production": "^0.1.0",
     "@civ-clone/base-terrain-yield-trade": "^0.1.0",

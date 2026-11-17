@@ -11,6 +11,8 @@ const Effect_1 = require("@civ-clone/core-rule/Effect");
 const Wonder_1 = require("@civ-clone/core-wonder/Wonder");
 const improvements_1 = require("../../data/improvements");
 const ClientRegistry_1 = require("@civ-clone/core-client/ClientRegistry");
+const cancelSpaceship_1 = require("@civ-clone/base-spaceship/lib/cancelSpaceship");
+const SpaceshipRegistry_1 = require("@civ-clone/core-spaceship/SpaceshipRegistry");
 const founder_1 = require("@civ-clone/civ2-city/lib/founder");
 const isHuman_1 = require("@civ-clone/civ2-difficulty/isHuman");
 const rules_1 = require("../../data/rules");
@@ -34,30 +36,42 @@ const rowOf = new Map(improvements_1.default.map(([Improvement], index) => [Impr
 //    improvements here. The founder is civ2-city's (`lib/founder`, `was_founder` ~5440): the loser of the city's last
 //    capture, or whoever has held it 63 turns since, read before civ2-city records this capture.
 const getRules = (dependencies = {}, randomNumberGenerator = core_random_1.instance) => {
-    const { cityImprovementRegistry } = (0, source_1.withDefaults)(dependencies), { clientRegistry = ClientRegistry_1.instance } = dependencies, standing = (city) => cityImprovementRegistry
+    const { cityImprovementRegistry } = (0, source_1.withDefaults)(dependencies), { clientRegistry = ClientRegistry_1.instance, spaceshipRegistry = SpaceshipRegistry_1.instance, } = dependencies, standing = (city) => cityImprovementRegistry
         .getByCity(city)
         .filter((improvement) => !(improvement instanceof Wonder_1.default));
     return [
         new Captured_1.default('civ2-city-improvement:city/captured/palace-escape', new Criterion_1.default((city) => standing(city).some((improvement) => improvement instanceof CityImprovements_1.Palace)), new Effect_1.default((city, capturer, loser) => {
-            // A civil war that couldn't break out leaves no escape (`lib/capital`'s `barPalaceEscape`). Asked here, not as a
-            //  `Criterion`: every rule's criteria are asked before any effect runs, and the civil war's is an effect.
+            // A civil war that couldn't break out leaves no escape (`lib/capital`'s `barPalaceEscape`), and has lost the
+            //  ship itself. Asked here, not as a `Criterion`: every rule's criteria are asked before any effect runs, and
+            //  the civil war's is an effect.
             if ((0, capital_1.palaceEscapeBarred)(city)) {
                 return;
             }
+            // Whenever the Palace isn't saved, the spaceship is lost (`civ_spaceship_lost_notify`, city.cpp ~4819).
+            const loseShip = () => (0, cancelSpaceship_1.default)(loser, spaceshipRegistry);
             if (!(0, isHuman_1.default)(loser, clientRegistry)) {
                 const escape = (0, capital_1.palaceEscape)(city, loser, dependencies);
-                if (escape !== null) {
-                    (0, capital_1.escapeTo)(escape, loser, dependencies);
+                if (escape === null) {
+                    loseShip();
+                    return;
                 }
+                (0, capital_1.escapeTo)(escape, loser, dependencies);
                 return;
             }
             if ((0, capital_1.goldOf)(loser, dependencies) < rules_1.palaceEscapeCost) {
+                loseShip();
                 return;
             }
             const escape = (0, capital_1.palaceEscapeCandidate)(city, loser, dependencies);
-            if (escape !== null) {
-                (0, palaceEscapeChoice_1.askPalaceEscape)(city, loser, escape, dependencies);
+            if (escape === null) {
+                loseShip();
+                return;
             }
+            (0, palaceEscapeChoice_1.askPalaceEscape)(city, loser, escape, dependencies).then((saved) => {
+                if (!saved) {
+                    loseShip();
+                }
+            }, loseShip);
         })),
         new Captured_1.default('civ2-city-improvement:city/captured/palace', new Effect_1.default((city) => standing(city)
             .filter((improvement) => improvement instanceof CityImprovements_1.Palace)

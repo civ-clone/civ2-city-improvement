@@ -20,6 +20,8 @@ import Player from '@civ-clone/core-player/Player';
 import Wonder from '@civ-clone/core-wonder/Wonder';
 import improvements from '../../data/improvements';
 import { instance as clientRegistryInstance } from '@civ-clone/core-client/ClientRegistry';
+import cancelSpaceship from '@civ-clone/base-spaceship/lib/cancelSpaceship';
+import { instance as spaceshipRegistryInstance } from '@civ-clone/core-spaceship/SpaceshipRegistry';
 import { founderOf } from '@civ-clone/civ2-city/lib/founder';
 import isHuman from '@civ-clone/civ2-difficulty/isHuman';
 import { palaceEscapeCost } from '../../data/rules';
@@ -52,7 +54,10 @@ export const getRules = (
   randomNumberGenerator: () => number = rngInstance
 ): Captured[] => {
   const { cityImprovementRegistry } = withDefaults(dependencies),
-    { clientRegistry = clientRegistryInstance } = dependencies,
+    {
+      clientRegistry = clientRegistryInstance,
+      spaceshipRegistry = spaceshipRegistryInstance,
+    } = dependencies,
     standing = (city: City): CityImprovement[] =>
       cityImprovementRegistry
         .getByCity(city)
@@ -65,31 +70,52 @@ export const getRules = (
         standing(city).some((improvement) => improvement instanceof Palace)
       ),
       new Effect((city: City, capturer: Player, loser: Player): void => {
-        // A civil war that couldn't break out leaves no escape (`lib/capital`'s `barPalaceEscape`). Asked here, not as a
-        //  `Criterion`: every rule's criteria are asked before any effect runs, and the civil war's is an effect.
+        // A civil war that couldn't break out leaves no escape (`lib/capital`'s `barPalaceEscape`), and has lost the
+        //  ship itself. Asked here, not as a `Criterion`: every rule's criteria are asked before any effect runs, and
+        //  the civil war's is an effect.
         if (palaceEscapeBarred(city)) {
           return;
         }
 
+        // Whenever the Palace isn't saved, the spaceship is lost (`civ_spaceship_lost_notify`, city.cpp ~4819).
+        const loseShip = (): void => cancelSpaceship(loser, spaceshipRegistry);
+
         if (!isHuman(loser, clientRegistry)) {
           const escape = palaceEscape(city, loser, dependencies);
 
-          if (escape !== null) {
-            escapeTo(escape, loser, dependencies);
+          if (escape === null) {
+            loseShip();
+
+            return;
           }
+
+          escapeTo(escape, loser, dependencies);
 
           return;
         }
 
         if (goldOf(loser, dependencies) < palaceEscapeCost) {
+          loseShip();
+
           return;
         }
 
         const escape = palaceEscapeCandidate(city, loser, dependencies);
 
-        if (escape !== null) {
-          askPalaceEscape(city, loser, escape, dependencies);
+        if (escape === null) {
+          loseShip();
+
+          return;
         }
+
+        askPalaceEscape(city, loser, escape, dependencies).then(
+          (saved: boolean): void => {
+            if (!saved) {
+              loseShip();
+            }
+          },
+          loseShip
+        );
       })
     ),
 
