@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.bachContent = exports.sdiMissileAttackBelow = exports.cityDefenceMultiplier = exports.palaceEscapeGold = exports.palaceEscapeCities = exports.palaceEscapeAboveLevel = exports.palaceEscapeMinimumSize = exports.palaceEscapeCost = exports.barracksPrinceLevel = exports.pollutionRollCeiling = exports.populationPollutionDivisor = exports.pollutionTolerance = exports.plantQuarters = exports.manufacturingPlantQuarters = exports.factoryQuarters = exports.cathedralContent = exports.colosseumContent = exports.sewerSize = exports.aqueductSize = exports.granaryRowsPerCitizen = void 0;
+exports.warmingPatternMask = exports.warmingInlandOceansBelow = exports.warmingStrikeAboveLevel = exports.warmingWarningPollutionAbove = exports.warmingWarningLevel = exports.warmingComputerDivisor = exports.warmingPerWarming = exports.warmingPollutionFactor = exports.warmingMaximum = exports.warmingMinimum = exports.warmingStep = exports.bachContent = exports.sdiMissileAttackBelow = exports.cityDefenceMultiplier = exports.palaceEscapeGold = exports.palaceEscapeCities = exports.palaceEscapeAboveLevel = exports.palaceEscapeMinimumSize = exports.palaceEscapeCost = exports.barracksPrinceLevel = exports.pollutionRollCeiling = exports.populationPollutionDivisor = exports.pollutionTolerance = exports.plantQuarters = exports.manufacturingPlantQuarters = exports.factoryQuarters = exports.cathedralContent = exports.colosseumContent = exports.sewerSize = exports.aqueductSize = exports.granaryRowsPerCitizen = void 0;
 // Civilization II's city improvement numbers besides @IMPROVE's, each with the OpenCiv2 function it comes from
 //  (richardpenman/civ2@49f26ec). Numbers only.
 const cosmic_1 = require("@civ-clone/civ2-rules/data/cosmic");
@@ -36,4 +36,25 @@ exports.cityDefenceMultiplier = 2;
 exports.sdiMissileAttackBelow = 99;
 /** `city_split_trade`: J. S. Bach's Cathedral's content citizens, counted in Fundamentalism's tithes. */
 exports.bachContent = 2;
+/**
+ * `game_update_global_warming` (game.cpp 00486c2e): the level moves 1 a turn toward 2 × the pollution − 4 for each
+ *  warming so far − 1 for each city with a Solar Plant, and stays within 0 to 99. Pollution in a computer player's city
+ *  radius counts half (`polluted − w + w / 2`).
+ */
+exports.warmingStep = 1;
+exports.warmingMinimum = 0;
+exports.warmingMaximum = 99;
+exports.warmingPollutionFactor = 2;
+exports.warmingPerWarming = 4;
+exports.warmingComputerDivisor = 2;
+/** `game_update_global_warming`: a warning when the level is 12 and the pollution is above 6; a warming above 16. */
+exports.warmingWarningLevel = 12;
+exports.warmingWarningPollutionAbove = 6;
+exports.warmingStrikeAboveLevel = 16;
+/**
+ * `map_apply_global_warming` (map.cpp 004868fb): a square with fewer oceans around it than 7 less the warmings so far
+ *  is inland, and changes only where `(3x − 3y) & 7` is the warmings so far.
+ */
+exports.warmingInlandOceansBelow = 7;
+exports.warmingPatternMask = 7;
 //# sourceMappingURL=rules.js.map

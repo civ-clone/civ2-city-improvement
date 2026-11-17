@@ -56,6 +56,21 @@ citing its function. Other numbers are in `data/rules.ts`.
   City Walls are civ2-unit's (by class).
 - **Pollution** (`lib/pollution`, `Rules/City/pollution`): Civ2's shields and population steps, divisors and roll, only
   in a person's cities. The shields are counted before unit support and civ2-city's waste.
+- **Global warming** (`lib/globalWarming`, `Rules/Turn/global-warming`, on `base-global-warming`;
+  `game_update_global_warming`, `map_apply_global_warming`): at the start of every turn but the first, after the turn's
+  other `Start` rules, a level moves 1 toward 2 × the pollution − 4 for each warming so far − 1 for each city with a
+  Solar Plant, within 0 to 99. A polluted square counts 1, less half for each computer player's city (the barbarians'
+  included) with it in its radius, the halves added and rounded down once. A warning (`world:global-warming-warning`)
+  at level 12 while the pollution is above 6; above 16 the world warms (`world:global-warming`) and the level starts
+  from 0. A warming changes Desert, Plains, Grassland and Forest only: a square with fewer oceans around it than 7 less
+  the warmings so far is inland and, where `(3x − 3y) & 7` is the warmings so far (x in half squares on the isometric
+  grid), Desert and Plains become Desert and Grassland and Forest Plains; every other such square becomes Jungle (from
+  Forest) or Swamp, and civ2-world's `TerrainChanged` rule takes its irrigation, farmland and mine. The ocean count reads
+  the original's 20 offsets as its tables lie in memory: the 8 directions, the square itself 8 times (never ocean), and
+  the south-west, south, south-east and east neighbours again, so those four count twice; squares past the map's top or
+  bottom row don't count. From the seventh warming on no square is inland, so every one of the four terrains changes.
+- **A civil war's Palace** (`lib/capital`'s `barPalaceEscape`): a civil war that can't break out (civ2-player) bars
+  the captured capital's escape, as the original's `city4` does.
 
 ## Not yet (Civ2 M2a deviations and gaps)
 
@@ -72,5 +87,9 @@ citing its function. Other numbers are in `data/rules.ts`.
   (Civ2 counts before), and measures distance by the world's own metric rather than Civ2's diagonal one, so it can be
   one off at its thresholds.
 - **A computer player's late refounding** with free improvements isn't modelled.
+- **Global warming:** the original counts pollution near computer players' cities as it processes them during the
+  turn before, over the squares each can see; here it's the cities standing at the start of the turn, over their whole
+  radius. A changed square no one owns isn't given to the barbarians (`tile_set_owner(…, 0)`): squares have no owner
+  here. No multiplayer divisor (the pollution over the number of people).
 - **Shield waste**, and the computer players' shield rows by level, are civ2-city's and civ2-difficulty's; the Airport's
   part in the capital link (across land masses) is civ2-city's walk.

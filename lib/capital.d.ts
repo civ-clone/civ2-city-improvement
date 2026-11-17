@@ -52,6 +52,14 @@ export declare const palaceEscape: (
   loser: Player,
   dependencies?: CapitalDependencies
 ) => City | null;
+/**
+ * `captured`'s Palace may not escape: a computer player's civil war that couldn't break out has already chosen where
+ *  the next one is built (`city_capture_aftermath` passes `city4`, and `city_capture_aftermath_palace_escape` offers no
+ *  escape then). For the civil war's `Captured` rule to call before this package's escape rule runs.
+ */
+export declare const barPalaceEscape: (captured: City) => void;
+/** Whether `captured`'s Palace may not escape (`barPalaceEscape`). */
+export declare const palaceEscapeBarred: (captured: City) => boolean;
 /** Moves `loser`'s Palace to `city` for `palaceEscapeCost` gold. */
 export declare const escapeTo: (
   city: City,

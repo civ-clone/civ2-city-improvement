@@ -202,6 +202,22 @@ export const palaceEscape = (
   return palaceEscapeCandidate(captured, loser, dependencies);
 };
 
+// Captured capitals whose Palace may not escape.
+const barred = new WeakSet<City>();
+
+/**
+ * `captured`'s Palace may not escape: a computer player's civil war that couldn't break out has already chosen where
+ *  the next one is built (`city_capture_aftermath` passes `city4`, and `city_capture_aftermath_palace_escape` offers no
+ *  escape then). For the civil war's `Captured` rule to call before this package's escape rule runs.
+ */
+export const barPalaceEscape = (captured: City): void => {
+  barred.add(captured);
+};
+
+/** Whether `captured`'s Palace may not escape (`barPalaceEscape`). */
+export const palaceEscapeBarred = (captured: City): boolean =>
+  barred.has(captured);
+
 /** Moves `loser`'s Palace to `city` for `palaceEscapeCost` gold. */
 export const escapeTo = (
   city: City,

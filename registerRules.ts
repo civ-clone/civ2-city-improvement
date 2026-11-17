@@ -17,6 +17,7 @@ import cityPollutionDivisor from './Rules/City/pollution-divisor';
 import cityTileYield from './Rules/City/tile-yield';
 import cityYield from './Rules/City/yield';
 import cityYieldModifier from './Rules/City/yield-modifier';
+import globalWarming from './Rules/Turn/global-warming';
 import { deriveBuildRules } from '@civ-clone/base-city-improvement-rules/lib/build';
 import playerResearchComplete from './Rules/Player/research-complete';
 import registerAvailableBuildItems from './registerAvailableBuildItems';
@@ -87,7 +88,17 @@ export const register = (game: Game): void => {
       game.playerTreasuries
     ),
     ...unitCreated(game.unitImprovements, game.rules, registries),
-    ...unitStrength(game.cities, game.cityImprovements)
+    ...unitStrength(game.cities, game.cityImprovements),
+    ...globalWarming({
+      cityImprovementRegistry: game.cityImprovements,
+      cityRegistry: game.cities,
+      clientRegistry: game.clients,
+      engine: game.engine,
+      pendingEffectRegistry: game.pendingEffects,
+      ruleRegistry: game.rules,
+      tileImprovementRegistry: game.tileImprovements,
+      turn: game.turn,
+    })
   );
 };
 

@@ -30,3 +30,24 @@ export declare const cityDefenceMultiplier = 2;
 export declare const sdiMissileAttackBelow = 99;
 /** `city_split_trade`: J. S. Bach's Cathedral's content citizens, counted in Fundamentalism's tithes. */
 export declare const bachContent = 2;
+/**
+ * `game_update_global_warming` (game.cpp 00486c2e): the level moves 1 a turn toward 2 × the pollution − 4 for each
+ *  warming so far − 1 for each city with a Solar Plant, and stays within 0 to 99. Pollution in a computer player's city
+ *  radius counts half (`polluted − w + w / 2`).
+ */
+export declare const warmingStep = 1;
+export declare const warmingMinimum = 0;
+export declare const warmingMaximum = 99;
+export declare const warmingPollutionFactor = 2;
+export declare const warmingPerWarming = 4;
+export declare const warmingComputerDivisor = 2;
+/** `game_update_global_warming`: a warning when the level is 12 and the pollution is above 6; a warming above 16. */
+export declare const warmingWarningLevel = 12;
+export declare const warmingWarningPollutionAbove = 6;
+export declare const warmingStrikeAboveLevel = 16;
+/**
+ * `map_apply_global_warming` (map.cpp 004868fb): a square with fewer oceans around it than 7 less the warmings so far
+ *  is inland, and changes only where `(3x − 3y) & 7` is the warmings so far.
+ */
+export declare const warmingInlandOceansBelow = 7;
+export declare const warmingPatternMask = 7;

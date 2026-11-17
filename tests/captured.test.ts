@@ -24,7 +24,11 @@ import {
 } from '@civ-clone/civ2-city/lib/captureAftermath';
 import { civ2CityWaitBeforePlunder } from '../lib/palaceEscapeChoice';
 import { expect } from 'chai';
-import { palaceEscape, palaceEscapeCandidate } from '../lib/capital';
+import {
+  barPalaceEscape,
+  palaceEscape,
+  palaceEscapeCandidate,
+} from '../lib/capital';
 
 const tile = (x: number) => ({
   x,
@@ -250,6 +254,30 @@ describe('city:captured, the Palace escape', (): void => {
       r.cityImprovementRegistry.getByType(Palace).map((p) => p.city())
     ).eql([others[2]]);
     expect(gold()).equal(500);
+  });
+
+  it('offers no escape once a civil war that could not break out has barred it (`city4`)', (): void => {
+    const { captive, dependencies, gold, r } = world(),
+      ruleRegistry = new RuleRegistry(),
+      palace = built(Palace, captive);
+
+    r.cityImprovementRegistry.register(palace);
+    ruleRegistry.register(
+      ...improvementCreated(r.cityImprovementRegistry, new Engine()),
+      ...captured({ ...dependencies, ruleRegistry }, () => 0.9)
+    );
+    barPalaceEscape(captive);
+    ruleRegistry.process(
+      Captured,
+      captive,
+      'taker' as any,
+      'loser' as any,
+      null
+    );
+
+    expect(palace.destroyed()).true;
+    expect(r.cityImprovementRegistry.getByType(Palace)).eql([]);
+    expect(gold()).equal(1500);
   });
 });
 

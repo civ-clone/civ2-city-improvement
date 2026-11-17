@@ -38,7 +38,9 @@ const getRules = (dependencies = {}, randomNumberGenerator = core_random_1.insta
         .getByCity(city)
         .filter((improvement) => !(improvement instanceof Wonder_1.default));
     return [
-        new Captured_1.default('civ2-city-improvement:city/captured/palace-escape', new Criterion_1.default((city) => standing(city).some((improvement) => improvement instanceof CityImprovements_1.Palace)), new Effect_1.default((city, capturer, loser) => {
+        new Captured_1.default('civ2-city-improvement:city/captured/palace-escape', new Criterion_1.default((city) => standing(city).some((improvement) => improvement instanceof CityImprovements_1.Palace)), 
+        // A civil war that couldn't break out leaves no escape (`lib/capital`'s `barPalaceEscape`).
+        new Criterion_1.default((city) => !(0, capital_1.palaceEscapeBarred)(city)), new Effect_1.default((city, capturer, loser) => {
             if (!(0, isHuman_1.default)(loser, clientRegistry)) {
                 const escape = (0, capital_1.palaceEscape)(city, loser, dependencies);
                 if (escape !== null) {

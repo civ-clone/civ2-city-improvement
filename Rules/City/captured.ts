@@ -6,6 +6,7 @@ import {
   escapeTo,
   goldOf,
   palaceEscape,
+  palaceEscapeBarred,
   palaceEscapeCandidate,
 } from '../../lib/capital';
 import { Cathedral, Courthouse, Palace, Temple } from '../../CityImprovements';
@@ -63,6 +64,8 @@ export const getRules = (
       new Criterion((city: City): boolean =>
         standing(city).some((improvement) => improvement instanceof Palace)
       ),
+      // A civil war that couldn't break out leaves no escape (`lib/capital`'s `barPalaceEscape`).
+      new Criterion((city: City): boolean => !palaceEscapeBarred(city)),
       new Effect((city: City, capturer: Player, loser: Player): void => {
         if (!isHuman(loser, clientRegistry)) {
           const escape = palaceEscape(city, loser, dependencies);
