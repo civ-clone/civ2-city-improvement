@@ -11,6 +11,8 @@ const RuleRegistry_1 = require("@civ-clone/core-rule/RuleRegistry");
 const TileImprovementRegistry_1 = require("@civ-clone/core-tile-improvement/TileImprovementRegistry");
 const pollution_1 = require("../../lib/pollution");
 const Criterion_1 = require("@civ-clone/core-rule/Criterion");
+const Description_1 = require("@civ-clone/core-rule/Description");
+const CityImprovements_1 = require("../../CityImprovements");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const RuleIds_1 = require("../../RuleIds");
 const TileImprovements_1 = require("@civ-clone/civ2-world/TileImprovements");
@@ -35,7 +37,15 @@ const getRules = (dependencies = {}) => {
             ruleRegistry,
             engine,
             randomNumberGenerator,
-        }))),
+        })), new Description_1.default({
+            type: 'pollution_source_removed',
+            subject: CityImprovements_1.SolarPlant,
+            source: 'production',
+        }, {
+            type: 'pollution_source_removed',
+            subject: CityImprovements_1.MassTransit,
+            source: 'population',
+        })),
     ];
 };
 exports.getRules = getRules;

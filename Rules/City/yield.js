@@ -7,11 +7,15 @@ const PlayerGovernmentRegistry_1 = require("@civ-clone/core-government/PlayerGov
 const source_1 = require("../../lib/source");
 const RuleIds_1 = require("../../RuleIds");
 const Criterion_1 = require("@civ-clone/core-rule/Criterion");
+const Description_1 = require("@civ-clone/core-rule/Description");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const governments_1 = require("@civ-clone/civ2-rules/data/governments");
+const Governments_1 = require("@civ-clone/civ2-city/Governments");
+const Wonders_1 = require("../../Wonders");
 const Priority_1 = require("@civ-clone/core-rule/Priority");
 const Yield_1 = require("@civ-clone/core-city/Rules/Yield");
 const content_1 = require("../../lib/content");
+const rules_1 = require("../../data/rules");
 const government_1 = require("@civ-clone/civ2-city/lib/government");
 const has_1 = require("@civ-clone/base-city-improvement-rules/lib/has");
 const reduceYields_1 = require("@civ-clone/core-yield/lib/reduceYields");
@@ -27,11 +31,27 @@ const getRules = (dependencies = {}) => {
         //  nothing.
         new Yield_1.default(RuleIds_1.COURTHOUSE_RULE, new Priority_1.default(COURTHOUSE), new Criterion_1.default((city) => has(city, CityImprovements_1.Courthouse)), new Criterion_1.default((city) => !has(city, CityImprovements_1.Palace)), new Criterion_1.default((city, yields) => (0, reduceYields_1.reduceYield)(yields, Yields_1.Corruption) < 0), new Effect_1.default((city, yields) => 
         // Corruption is a negative yield: a negative value given back to it takes from what's lost.
-        new Yields_1.Corruption(Math.floor((0, reduceYields_1.reduceYield)(yields, Yields_1.Corruption) / 2), CityImprovements_1.Courthouse.name))),
+        new Yields_1.Corruption(Math.floor((0, reduceYields_1.reduceYield)(yields, Yields_1.Corruption) / rules_1.courthouseCorruptionDivisor), CityImprovements_1.Courthouse.name)), new Description_1.default({
+            type: 'yield_percent',
+            subject: CityImprovements_1.Courthouse,
+            yield: Yields_1.Corruption,
+            value: -1 / rules_1.courthouseCorruptionDivisor,
+            of: 'total',
+            notWith: [CityImprovements_1.Palace],
+        })),
         // `city_split_trade`: under Fundamentalism the improvements' content citizens (and J. S. Bach's) are paid as tithes, in gold, before
         //  the Marketplace's bonus.
         new Yield_1.default('civ2-city-improvement:city/yield/tithes', new Priority_1.default(TITHES), new Criterion_1.default((city) => (0, government_1.default)(city.player(), playerGovernmentRegistry) ===
-            governments_1.FUNDAMENTALISM), new Criterion_1.default((city) => tithes(city) > 0), new Effect_1.default((city) => new Yields_1.Gold(tithes(city), 'tithes'))),
+            governments_1.FUNDAMENTALISM), new Criterion_1.default((city) => tithes(city) > 0), new Effect_1.default((city) => new Yields_1.Gold(tithes(city), 'tithes')), new Description_1.default(...content_1.contentImprovements.map((Improvement) => ({
+            type: 'tithe',
+            subject: Improvement,
+            with: [Governments_1.Fundamentalism],
+        })), {
+            type: 'tithe',
+            subject: Wonders_1.JsBachsCathedral,
+            with: [Governments_1.Fundamentalism],
+            scope: 'player',
+        })),
     ];
 };
 exports.getRules = getRules;

@@ -16,7 +16,7 @@ import { Registries, owns, withDefaults } from './source';
 import { AdamSmithsTradingCompany } from '../Wonders';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 import Player from '@civ-clone/core-player/Player';
-import { barracksPrinceLevel } from '../data/rules';
+import { adamSmithUpkeep, barracksPrinceLevel } from '../data/rules';
 import governmentOf from '@civ-clone/civ2-city/lib/government';
 import improvements from '../data/improvements';
 import { levelOf } from '@civ-clone/civ2-difficulty/level';
@@ -75,7 +75,7 @@ export const upkeepFor = (
       }
     }
 
-    if (cost === 1) {
+    if (cost === adamSmithUpkeep) {
       if (adamSmith === null) {
         adamSmith = owns(player, AdamSmithsTradingCompany, registries);
       }

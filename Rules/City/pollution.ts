@@ -30,6 +30,8 @@ import {
 import { pollution, rollRange } from '../../lib/pollution';
 import City from '@civ-clone/core-city/City';
 import Criterion from '@civ-clone/core-rule/Criterion';
+import Description from '@civ-clone/core-rule/Description';
+import { MassTransit, SolarPlant } from '../../CityImprovements';
 import Effect from '@civ-clone/core-rule/Effect';
 import { POLLUTION_RULE } from '../../RuleIds';
 import { Pollution } from '@civ-clone/civ2-world/TileImprovements';
@@ -104,6 +106,18 @@ export const getRules = (
             randomNumberGenerator,
           }
         )
+      ),
+      new Description(
+        {
+          type: 'pollution_source_removed',
+          subject: SolarPlant,
+          source: 'production',
+        },
+        {
+          type: 'pollution_source_removed',
+          subject: MassTransit,
+          source: 'population',
+        }
       )
     ),
   ];

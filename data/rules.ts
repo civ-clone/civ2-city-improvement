@@ -5,15 +5,49 @@ import cosmic from '@civ-clone/civ2-rules/data/cosmic';
 /** `city_process_food`: a Granary (or the Pyramids) leaves half a box (@COSMIC's food rows ÷ 2 a citizen) after growth. */
 export const granaryRowsPerCitizen = cosmic.foodBoxRows >> 1;
 
+/** The share of the food box a Granary (or the Pyramids) keeps on growth. */
+export const granaryStore = granaryRowsPerCitizen / cosmic.foodBoxRows;
+
 /** `city_needed_size_improvement`: the sizes a city can't grow past without an Aqueduct and a Sewer System. */
 export const aqueductSize = cosmic.aqueductSize;
 export const sewerSize = cosmic.sewerSize;
 
 /** `city_calc_trade_happiness` stage 2: a Colosseum's content citizens, and one more with Electronics. */
 export const colosseumContent = 3;
+export const colosseumElectronicsContent = 1;
 
 /** `city_calc_trade_happiness` stage 2: a Cathedral's (or Michelangelo's) content citizens with Theology, one fewer without. */
 export const cathedralContent = 3;
+
+/** `city_calc_trade_happiness` stage 2: the Cathedral's one fewer without Theology and one more without Communism. */
+export const cathedralTheologyContent = 1;
+export const cathedralCommunismContent = 1;
+
+/** `city_calc_trade_happiness` stage 2: a Temple's content citizen with each of Ceremonial Burial and Mysticism. */
+export const templeContentPerAdvance = 1;
+
+/** `city_calc_trade_happiness` stage 2: the Oracle multiplies its owner's Temples' content citizens. */
+export const oracleMultiplier = 2;
+
+/** `city_split_trade`: each Marketplace, Bank and Stock Exchange (and Library, University and Research Lab) adds 1/2. */
+export const cityBonusShift = 1;
+
+/** `city_calc_corruption`: a Courthouse halves the corruption. */
+export const courthouseCorruptionDivisor = 2;
+
+/** Under Democracy a Courthouse, or the Palace, makes one content citizen happy. */
+export const courthouseDemocracyHappy = 1;
+
+/** `civ_improvement_upkeep`: with Adam Smith's, an improvement whose upkeep is this costs nothing. */
+export const adamSmithUpkeep = 1;
+
+/** `city_tile_yield`: a Harbour's food, and an Offshore Platform's shield, on each ocean square. */
+export const harbourFood = 1;
+export const offshorePlatformProduction = 1;
+
+/** `city_tile_yield`: a Supermarket adds food >> 1 on farmland, and Superhighways trade ÷ 2 on a road. */
+export const supermarketShift = 1;
+export const superhighwaysDivisor = 2;
 
 /** `city_calc_shields_pollution`: a Factory and a Manufacturing Plant each add 2/4 of the shields; a plant 2/4 more, no more than they do. */
 export const factoryQuarters = 2;

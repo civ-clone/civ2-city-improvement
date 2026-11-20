@@ -9,12 +9,16 @@ import City from '@civ-clone/core-city/City';
 import { COURTHOUSE_RULE } from '../../RuleIds';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 import Criterion from '@civ-clone/core-rule/Criterion';
+import Description from '@civ-clone/core-rule/Description';
 import Effect from '@civ-clone/core-rule/Effect';
 import { FUNDAMENTALISM } from '@civ-clone/civ2-rules/data/governments';
+import { Fundamentalism } from '@civ-clone/civ2-city/Governments';
+import { JsBachsCathedral } from '../../Wonders';
 import Priority from '@civ-clone/core-rule/Priority';
 import Yield from '@civ-clone/core-yield/Yield';
 import YieldRule from '@civ-clone/core-city/Rules/Yield';
-import { tithes as cityTithes } from '../../lib/content';
+import { contentImprovements, tithes as cityTithes } from '../../lib/content';
+import { courthouseCorruptionDivisor } from '../../data/rules';
 import governmentOf from '@civ-clone/civ2-city/lib/government';
 import { improvementOf } from '@civ-clone/base-city-improvement-rules/lib/has';
 import { reduceYield } from '@civ-clone/core-yield/lib/reduceYields';
@@ -54,10 +58,20 @@ export const getRules = (dependencies: YieldDependencies = {}): YieldRule[] => {
         (city: City, yields: Yield[]): Yield =>
           // Corruption is a negative yield: a negative value given back to it takes from what's lost.
           new Corruption(
-            Math.floor(reduceYield(yields, Corruption) / 2),
+            Math.floor(
+              reduceYield(yields, Corruption) / courthouseCorruptionDivisor
+            ),
             Courthouse.name
           )
-      )
+      ),
+      new Description({
+        type: 'yield_percent',
+        subject: Courthouse,
+        yield: Corruption,
+        value: -1 / courthouseCorruptionDivisor,
+        of: 'total',
+        notWith: [Palace],
+      })
     ),
 
     // `city_split_trade`: under Fundamentalism the improvements' content citizens (and J. S. Bach's) are paid as tithes, in gold, before
@@ -71,7 +85,20 @@ export const getRules = (dependencies: YieldDependencies = {}): YieldRule[] => {
           FUNDAMENTALISM
       ),
       new Criterion((city: City): boolean => tithes(city) > 0),
-      new Effect((city: City): Yield => new Gold(tithes(city), 'tithes'))
+      new Effect((city: City): Yield => new Gold(tithes(city), 'tithes')),
+      new Description(
+        ...contentImprovements.map((Improvement) => ({
+          type: 'tithe',
+          subject: Improvement,
+          with: [Fundamentalism],
+        })),
+        {
+          type: 'tithe',
+          subject: JsBachsCathedral,
+          with: [Fundamentalism],
+          scope: 'player',
+        }
+      )
     ),
   ];
 };

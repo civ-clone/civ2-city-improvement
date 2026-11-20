@@ -8,6 +8,8 @@ const CityImprovements_1 = require("../../CityImprovements");
 const TileImprovementRegistry_1 = require("@civ-clone/core-tile-improvement/TileImprovementRegistry");
 const CityTileYield_1 = require("@civ-clone/core-city/Rules/CityTileYield");
 const Criterion_1 = require("@civ-clone/core-rule/Criterion");
+const Description_1 = require("@civ-clone/core-rule/Description");
+const rules_1 = require("../../data/rules");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const Terrains_1 = require("@civ-clone/civ2-world/Terrains");
 const has_1 = require("@civ-clone/base-city-improvement-rules/lib/has");
@@ -36,12 +38,36 @@ const getRules = ({ cityImprovementRegistry = CityImprovementRegistry_1.instance
         }
     };
     return [
-        new CityTileYield_1.default(`civ2-city-improvement:city/tile-yield/${CityImprovements_1.Harbour.name}`, (0, tileYieldPipeline_1.tileYieldPriority)('harbour'), new Criterion_1.default((city, tile) => isOcean(tile)), new Criterion_1.default(has(CityImprovements_1.Harbour)), new Effect_1.default(adds(Yields_1.Food, () => 1, CityImprovements_1.Harbour.name))),
-        new CityTileYield_1.default(`civ2-city-improvement:city/tile-yield/${CityImprovements_1.OffshorePlatform.name}`, (0, tileYieldPipeline_1.tileYieldPriority)('offshorePlatform'), new Criterion_1.default((city, tile) => isOcean(tile)), new Criterion_1.default(has(CityImprovements_1.OffshorePlatform)), new Effect_1.default(adds(Yields_1.Production, () => 1, CityImprovements_1.OffshorePlatform.name))),
-        new CityTileYield_1.default(`civ2-city-improvement:city/tile-yield/${CityImprovements_1.Supermarket.name}`, (0, tileYieldPipeline_1.tileYieldPriority)('supermarket'), new Criterion_1.default(has(CityImprovements_1.Supermarket)), new Criterion_1.default((city, tile) => !isOcean(tile)), new Criterion_1.default((city, tile) => tile === city.tile() || hasOn(tile, TileImprovements_1.Farmland)), new Effect_1.default(adds(Yields_1.Food, (food) => food >> 1, CityImprovements_1.Supermarket.name))),
+        new CityTileYield_1.default(`civ2-city-improvement:city/tile-yield/${CityImprovements_1.Harbour.name}`, (0, tileYieldPipeline_1.tileYieldPriority)('harbour'), new Criterion_1.default((city, tile) => isOcean(tile)), new Criterion_1.default(has(CityImprovements_1.Harbour)), new Effect_1.default(adds(Yields_1.Food, () => rules_1.harbourFood, CityImprovements_1.Harbour.name)), new Description_1.default({
+            type: 'tile_yield',
+            subject: CityImprovements_1.Harbour,
+            yield: Yields_1.Food,
+            value: rules_1.harbourFood,
+            on: 'ocean',
+        })),
+        new CityTileYield_1.default(`civ2-city-improvement:city/tile-yield/${CityImprovements_1.OffshorePlatform.name}`, (0, tileYieldPipeline_1.tileYieldPriority)('offshorePlatform'), new Criterion_1.default((city, tile) => isOcean(tile)), new Criterion_1.default(has(CityImprovements_1.OffshorePlatform)), new Effect_1.default(adds(Yields_1.Production, () => rules_1.offshorePlatformProduction, CityImprovements_1.OffshorePlatform.name)), new Description_1.default({
+            type: 'tile_yield',
+            subject: CityImprovements_1.OffshorePlatform,
+            yield: Yields_1.Production,
+            value: rules_1.offshorePlatformProduction,
+            on: 'ocean',
+        })),
+        new CityTileYield_1.default(`civ2-city-improvement:city/tile-yield/${CityImprovements_1.Supermarket.name}`, (0, tileYieldPipeline_1.tileYieldPriority)('supermarket'), new Criterion_1.default(has(CityImprovements_1.Supermarket)), new Criterion_1.default((city, tile) => !isOcean(tile)), new Criterion_1.default((city, tile) => tile === city.tile() || hasOn(tile, TileImprovements_1.Farmland)), new Effect_1.default(adds(Yields_1.Food, (food) => food >> rules_1.supermarketShift, CityImprovements_1.Supermarket.name)), new Description_1.default({
+            type: 'tile_yield_percent',
+            subject: CityImprovements_1.Supermarket,
+            yield: Yields_1.Food,
+            value: 1 / (1 << rules_1.supermarketShift),
+            on: 'farmland',
+        })),
         new CityTileYield_1.default(`civ2-city-improvement:city/tile-yield/${CityImprovements_1.Superhighways.name}`, (0, tileYieldPipeline_1.tileYieldPriority)('superhighways'), new Criterion_1.default(has(CityImprovements_1.Superhighways)), 
         // A railroad is built on a road, so Civ2's road bit is set on it too.
-        new Criterion_1.default((city, tile) => tile === city.tile() || hasOn(tile, TileImprovements_1.Road, TileImprovements_1.Railroad)), new Effect_1.default(adds(Yields_1.Trade, (trade) => Math.trunc(trade / 2), CityImprovements_1.Superhighways.name))),
+        new Criterion_1.default((city, tile) => tile === city.tile() || hasOn(tile, TileImprovements_1.Road, TileImprovements_1.Railroad)), new Effect_1.default(adds(Yields_1.Trade, (trade) => Math.trunc(trade / rules_1.superhighwaysDivisor), CityImprovements_1.Superhighways.name)), new Description_1.default({
+            type: 'tile_yield_percent',
+            subject: CityImprovements_1.Superhighways,
+            yield: Yields_1.Trade,
+            value: 1 / rules_1.superhighwaysDivisor,
+            on: 'roads',
+        })),
     ];
 };
 exports.getRules = getRules;

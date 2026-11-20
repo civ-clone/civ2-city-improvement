@@ -22,6 +22,13 @@ import City from '@civ-clone/core-city/City';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 import CityTileYield from '@civ-clone/core-city/Rules/CityTileYield';
 import Criterion from '@civ-clone/core-rule/Criterion';
+import Description from '@civ-clone/core-rule/Description';
+import {
+  harbourFood,
+  offshorePlatformProduction,
+  superhighwaysDivisor,
+  supermarketShift,
+} from '../../data/rules';
 import Effect from '@civ-clone/core-rule/Effect';
 import { Ocean } from '@civ-clone/civ2-world/Terrains';
 import Tile from '@civ-clone/core-world/Tile';
@@ -84,7 +91,14 @@ export const getRules = ({
       tileYieldPriority('harbour'),
       new Criterion((city: City, tile: Tile): boolean => isOcean(tile)),
       new Criterion(has(Harbour)),
-      new Effect(adds(Food, () => 1, Harbour.name))
+      new Effect(adds(Food, () => harbourFood, Harbour.name)),
+      new Description({
+        type: 'tile_yield',
+        subject: Harbour,
+        yield: Food,
+        value: harbourFood,
+        on: 'ocean',
+      })
     ),
 
     new CityTileYield(
@@ -92,7 +106,20 @@ export const getRules = ({
       tileYieldPriority('offshorePlatform'),
       new Criterion((city: City, tile: Tile): boolean => isOcean(tile)),
       new Criterion(has(OffshorePlatform)),
-      new Effect(adds(Production, () => 1, OffshorePlatform.name))
+      new Effect(
+        adds(
+          Production,
+          () => offshorePlatformProduction,
+          OffshorePlatform.name
+        )
+      ),
+      new Description({
+        type: 'tile_yield',
+        subject: OffshorePlatform,
+        yield: Production,
+        value: offshorePlatformProduction,
+        on: 'ocean',
+      })
     ),
 
     new CityTileYield(
@@ -104,7 +131,16 @@ export const getRules = ({
         (city: City, tile: Tile): boolean =>
           tile === city.tile() || hasOn(tile, Farmland)
       ),
-      new Effect(adds(Food, (food) => food >> 1, Supermarket.name))
+      new Effect(
+        adds(Food, (food) => food >> supermarketShift, Supermarket.name)
+      ),
+      new Description({
+        type: 'tile_yield_percent',
+        subject: Supermarket,
+        yield: Food,
+        value: 1 / (1 << supermarketShift),
+        on: 'farmland',
+      })
     ),
 
     new CityTileYield(
@@ -117,8 +153,19 @@ export const getRules = ({
           tile === city.tile() || hasOn(tile, Road, Railroad)
       ),
       new Effect(
-        adds(Trade, (trade) => Math.trunc(trade / 2), Superhighways.name)
-      )
+        adds(
+          Trade,
+          (trade) => Math.trunc(trade / superhighwaysDivisor),
+          Superhighways.name
+        )
+      ),
+      new Description({
+        type: 'tile_yield_percent',
+        subject: Superhighways,
+        yield: Trade,
+        value: 1 / superhighwaysDivisor,
+        on: 'roads',
+      })
     ),
   ];
 };

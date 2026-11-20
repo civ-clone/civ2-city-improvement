@@ -1,6 +1,7 @@
 import { CityImprovement } from '@civ-clone/core-city-improvement/CityImprovement';
 import CityGrowth from '@civ-clone/core-city-growth/CityGrowth';
 import Criterion from '@civ-clone/core-rule/Criterion';
+import Description from '@civ-clone/core-rule/Description';
 import Effect from '@civ-clone/core-rule/Effect';
 import { FoodStorage } from '../../Yields';
 import { Granary } from '../../CityImprovements';
@@ -8,7 +9,7 @@ import Low from '@civ-clone/core-rule/Priorities/Low';
 import Grow from '@civ-clone/core-city-growth/Rules/Grow';
 import { Pyramids } from '../../Wonders';
 import { Registries, hasEither, withDefaults } from '../../lib/source';
-import { granaryRowsPerCitizen } from '../../data/rules';
+import { granaryRowsPerCitizen, granaryStore } from '../../data/rules';
 import { growthLimit } from '@civ-clone/base-city-growth-limit/lib/growthLimit';
 import { growthLimits } from '../../lib/growthLimit';
 
@@ -30,6 +31,15 @@ export const getRules = (registries: Registries = {}): Grow[] => {
         cityGrowth.add(
           new FoodStorage((cityGrowth.size() + 1) * granaryRowsPerCitizen)
         )
+      ),
+      new Description(
+        { type: 'growth_store', subject: Granary, value: granaryStore },
+        {
+          type: 'acts_as',
+          subject: Pyramids,
+          improvement: Granary,
+          scope: 'player',
+        }
       )
     ),
     new Grow(
@@ -52,7 +62,14 @@ export const getRules = (registries: Registries = {}): Grow[] => {
         )!;
 
         cityGrowth.shrink(Needs as typeof CityImprovement);
-      })
+      }),
+      new Description(
+        ...growthLimits.map(([size, Improvement]) => ({
+          type: 'size_limit',
+          subject: Improvement,
+          value: size,
+        }))
+      )
     ),
   ];
 };

@@ -9,7 +9,17 @@ import {
 } from '@civ-clone/civ2-science/Advances';
 import { JsBachsCathedral, MichelangelosChapel, Oracle } from '../Wonders';
 import { Registries, owns, sourceOf, withDefaults } from './source';
-import { bachContent, cathedralContent, colosseumContent } from '../data/rules';
+import {
+  bachContent,
+  cathedralCommunismContent,
+  cathedralContent,
+  cathedralTheologyContent,
+  colosseumContent,
+  colosseumElectronicsContent,
+  oracleMultiplier,
+  templeContentPerAdvance,
+} from '../data/rules';
+import { EffectDescription } from '@civ-clone/core-rule/Description';
 import City from '@civ-clone/core-city/City';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 
@@ -39,7 +49,10 @@ export const colosseum = (
     : {
         source,
         value:
-          colosseumContent + (knows(city, Electronics, registries) ? 1 : 0),
+          colosseumContent +
+          (knows(city, Electronics, registries)
+            ? colosseumElectronicsContent
+            : 0),
       };
 };
 
@@ -59,8 +72,8 @@ export const cathedral = (
         source,
         value:
           cathedralContent -
-          (knows(city, Theology, registries) ? 0 : 1) +
-          (knows(city, Communism, registries) ? 0 : 1),
+          (knows(city, Theology, registries) ? 0 : cathedralTheologyContent) +
+          (knows(city, Communism, registries) ? 0 : cathedralCommunismContent),
       };
 };
 
@@ -75,16 +88,98 @@ export const temple = (
   }
 
   const value =
-    (knows(city, Mysticism, registries) ? 1 : 0) +
-    (knows(city, CeremonialBurial, registries) ? 1 : 0);
+    (knows(city, Mysticism, registries) ? templeContentPerAdvance : 0) +
+    (knows(city, CeremonialBurial, registries) ? templeContentPerAdvance : 0);
 
   return {
     source,
-    value: owns(city.player(), Oracle, registries) ? value * 2 : value,
+    value: owns(city.player(), Oracle, registries)
+      ? value * oracleMultiplier
+      : value,
   };
 };
 
 export const contents = [colosseum, cathedral, temple];
+
+/** The improvements `contents` asks about, in its order. */
+export const contentImprovements: (typeof CityImprovement)[] = [
+  Colosseum,
+  Cathedral,
+  Temple,
+];
+
+/** What each of `contents` does, for the Civilopedia (civ-clone/web-renderer#1196). */
+export const contentDescriptions = new Map<Function, EffectDescription[]>([
+  [
+    colosseum,
+    [
+      { type: 'content', subject: Colosseum, value: colosseumContent },
+      {
+        type: 'content',
+        subject: Colosseum,
+        value: colosseumElectronicsContent,
+        step: 'more',
+        with: [Electronics],
+      },
+    ],
+  ],
+  [
+    cathedral,
+    [
+      {
+        type: 'content',
+        subject: Cathedral,
+        value: cathedralContent,
+        with: [Monotheism],
+      },
+      {
+        type: 'content',
+        subject: Cathedral,
+        value: cathedralTheologyContent,
+        step: 'fewer',
+        until: Theology,
+      },
+      {
+        type: 'content',
+        subject: Cathedral,
+        value: cathedralCommunismContent,
+        step: 'more',
+        until: Communism,
+      },
+      {
+        type: 'acts_as',
+        subject: MichelangelosChapel,
+        improvement: Cathedral,
+        scope: 'player',
+      },
+    ],
+  ],
+  [
+    temple,
+    [
+      {
+        type: 'content',
+        subject: Temple,
+        value: templeContentPerAdvance,
+        with: [CeremonialBurial],
+      },
+      {
+        type: 'content',
+        subject: Temple,
+        value: templeContentPerAdvance,
+        step: 'more',
+        with: [Mysticism],
+      },
+      {
+        type: 'content_multiplier',
+        subject: Oracle,
+        value: oracleMultiplier,
+        inCitiesWith: [Temple],
+        scope: 'player',
+      },
+    ],
+  ],
+]);
 
 /**
  * Fundamentalism's tithes (`city_split_trade`): the content the city's improvements make, before the unhappy cap, and

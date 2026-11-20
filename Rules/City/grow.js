@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRules = void 0;
 const Criterion_1 = require("@civ-clone/core-rule/Criterion");
+const Description_1 = require("@civ-clone/core-rule/Description");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const Yields_1 = require("../../Yields");
 const CityImprovements_1 = require("../../CityImprovements");
@@ -19,14 +20,23 @@ const growthLimit_2 = require("../../lib/growthLimit");
 const getRules = (registries = {}) => {
     const { cityImprovementRegistry } = (0, source_1.withDefaults)(registries);
     return [
-        new Grow_1.default('civ2-city-improvement:city/grow/granary', new Low_1.default(), new Criterion_1.default((cityGrowth) => (0, source_1.hasEither)(cityGrowth.city(), CityImprovements_1.Granary, Wonders_1.Pyramids, registries)), new Effect_1.default((cityGrowth) => cityGrowth.add(new Yields_1.FoodStorage((cityGrowth.size() + 1) * rules_1.granaryRowsPerCitizen)))),
+        new Grow_1.default('civ2-city-improvement:city/grow/granary', new Low_1.default(), new Criterion_1.default((cityGrowth) => (0, source_1.hasEither)(cityGrowth.city(), CityImprovements_1.Granary, Wonders_1.Pyramids, registries)), new Effect_1.default((cityGrowth) => cityGrowth.add(new Yields_1.FoodStorage((cityGrowth.size() + 1) * rules_1.granaryRowsPerCitizen))), new Description_1.default({ type: 'growth_store', subject: CityImprovements_1.Granary, value: rules_1.granaryStore }, {
+            type: 'acts_as',
+            subject: Wonders_1.Pyramids,
+            improvement: CityImprovements_1.Granary,
+            scope: 'player',
+        })),
         new Grow_1.default('civ2-city-improvement:city/grow/size-limit', new Low_1.default(), new Criterion_1.default((cityGrowth) => {
             const limit = (0, growthLimit_1.growthLimit)(cityGrowth, growthLimit_2.growthLimits, cityImprovementRegistry);
             return limit !== null && cityGrowth.size() > limit[0];
         }), new Effect_1.default((cityGrowth) => {
             const [, Needs] = (0, growthLimit_1.growthLimit)(cityGrowth, growthLimit_2.growthLimits, cityImprovementRegistry);
             cityGrowth.shrink(Needs);
-        })),
+        }), new Description_1.default(...growthLimit_2.growthLimits.map(([size, Improvement]) => ({
+            type: 'size_limit',
+            subject: Improvement,
+            value: size,
+        })))),
     ];
 };
 exports.getRules = getRules;

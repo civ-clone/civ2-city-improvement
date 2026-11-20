@@ -1,4 +1,5 @@
 import { Registries } from './source';
+import { EffectDescription } from '@civ-clone/core-rule/Description';
 import City from '@civ-clone/core-city/City';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 /** What makes the city's citizens content (`source`), and how many it makes content, before the unhappy cap. */
@@ -29,6 +30,10 @@ export declare const contents: ((
   city: City,
   registries?: Registries
 ) => Content | null)[];
+/** The improvements `contents` asks about, in its order. */
+export declare const contentImprovements: (typeof CityImprovement)[];
+/** What each of `contents` does, for the Civilopedia (civ-clone/web-renderer#1196). */
+export declare const contentDescriptions: Map<Function, EffectDescription[]>;
 /**
  * Fundamentalism's tithes (`city_split_trade`): the content the city's improvements make, before the unhappy cap, and
  *  J. S. Bach's 2 for its owner. Bach's content itself is civ2-wonder's.

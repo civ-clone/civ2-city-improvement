@@ -18,16 +18,24 @@ import {
   instance as playerGovernmentRegistryInstance,
 } from '@civ-clone/core-government/PlayerGovernmentRegistry';
 import { Registries, withDefaults } from '../../lib/source';
-import { paysUpkeep, upkeepFor } from '../../lib/upkeep';
+import {
+  freeUnderFundamentalism,
+  paysUpkeep,
+  upkeepFor,
+} from '../../lib/upkeep';
+import { AdamSmithsTradingCompany } from '../../Wonders';
+import { Democracy, Fundamentalism } from '@civ-clone/civ2-city/Governments';
+import { adamSmithUpkeep, courthouseDemocracyHappy } from '../../data/rules';
 import City from '@civ-clone/core-city/City';
 import Cost from '@civ-clone/core-city/Rules/Cost';
 import MilitaryUnhappiness from '@civ-clone/base-city-yield-military-unhappiness/MilitaryUnhappiness';
 import Criterion from '@civ-clone/core-rule/Criterion';
+import Description from '@civ-clone/core-rule/Description';
 import { DEMOCRACY } from '@civ-clone/civ2-rules/data/governments';
 import Effect from '@civ-clone/core-rule/Effect';
 import Low from '@civ-clone/core-rule/Priorities/Low';
 import Yield from '@civ-clone/core-yield/Yield';
-import { Content, contents } from '../../lib/content';
+import { Content, contentDescriptions, contents } from '../../lib/content';
 import governmentOf from '@civ-clone/civ2-city/lib/government';
 import improvements from '../../data/improvements';
 import { improvementOf } from '@civ-clone/base-city-improvement-rules/lib/has';
@@ -93,7 +101,31 @@ export const getRules = (dependencies: CostDependencies = {}): Cost[] => {
               ? [new CityImprovementMaintenanceGold(cost, improvement)]
               : [];
           });
-      })
+      }),
+      new Description(
+        // Each @IMPROVE row's upkeep, where there is one.
+        ...improvements
+          .filter(([, , upkeep]) => upkeep > 0)
+          .map(([Improvement, , upkeep]) => ({
+            type: 'upkeep',
+            subject: Improvement,
+            yield: CityImprovementMaintenanceGold,
+            value: upkeep,
+          })),
+        ...freeUnderFundamentalism.map((Improvement) => ({
+          type: 'upkeep',
+          subject: Improvement,
+          yield: CityImprovementMaintenanceGold,
+          value: 0,
+          with: [Fundamentalism],
+        })),
+        {
+          type: 'pays_upkeep',
+          subject: AdamSmithsTradingCompany,
+          value: adamSmithUpkeep,
+          scope: 'player',
+        }
+      )
     ),
 
     // The content citizens of the city's improvements (`lib/content`), after the luxuries and before civ2-city-happiness's
@@ -125,7 +157,8 @@ export const getRules = (dependencies: CostDependencies = {}): Cost[] => {
             Math.min(value, stageTwoUnhappy(yields)),
             source
           );
-        })
+        }),
+        new Description(...(contentDescriptions.get(content) ?? []))
       );
     }),
 
@@ -150,7 +183,7 @@ export const getRules = (dependencies: CostDependencies = {}): Cost[] => {
       new Effect(
         (city: City): Yield =>
           new Happiness(
-            1,
+            courthouseDemocracyHappy,
             (improvementOf(
               city,
               Courthouse,
@@ -162,6 +195,22 @@ export const getRules = (dependencies: CostDependencies = {}): Cost[] => {
                 registries.cityImprovementRegistry
               ))!.id()
           )
+      ),
+      // One between them: a Courthouse in the Palace's city adds nothing more.
+      new Description(
+        {
+          type: 'happy',
+          subject: Courthouse,
+          value: courthouseDemocracyHappy,
+          with: [Democracy],
+          notWith: [Palace],
+        },
+        {
+          type: 'happy',
+          subject: Palace,
+          value: courthouseDemocracyHappy,
+          with: [Democracy],
+        }
       )
     ),
   ];

@@ -7,6 +7,7 @@ const meltdown_1 = require("../../lib/meltdown");
 const PlayerResearchRegistry_1 = require("@civ-clone/core-science/PlayerResearchRegistry");
 const RuleRegistry_1 = require("@civ-clone/core-rule/RuleRegistry");
 const Criterion_1 = require("@civ-clone/core-rule/Criterion");
+const Description_1 = require("@civ-clone/core-rule/Description");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const Advances_1 = require("@civ-clone/civ2-science/Advances");
 const RuleIds_1 = require("../../RuleIds");
@@ -34,6 +35,10 @@ const getRules = (dependencies = {}) => {
                 (0, meltdown_1.meltdownOdds)((0, level_1.levelOf)(gameDifficultyRegistry))) {
                 (0, meltdown_1.meltdown)(city, dependencies);
             }
+        }), new Description_1.default({
+            type: 'meltdown',
+            subject: CityImprovements_1.NuclearPlant,
+            until: Advances_1.FusionPower,
         })),
     ];
 };
