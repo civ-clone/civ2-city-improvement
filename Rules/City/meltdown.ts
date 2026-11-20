@@ -22,6 +22,7 @@ import {
 import City from '@civ-clone/core-city/City';
 import { CityImprovementRegistry } from '@civ-clone/core-city-improvement/CityImprovementRegistry';
 import Criterion from '@civ-clone/core-rule/Criterion';
+import Description from '@civ-clone/core-rule/Description';
 import Effect from '@civ-clone/core-rule/Effect';
 import { FusionPower } from '@civ-clone/civ2-science/Advances';
 import { MELTDOWN_RULE } from '../../RuleIds';
@@ -92,6 +93,11 @@ export const getRules = (
         ) {
           meltdown(city, dependencies);
         }
+      }),
+      new Description({
+        type: 'meltdown',
+        subject: NuclearPlant,
+        until: FusionPower,
       })
     ),
   ];

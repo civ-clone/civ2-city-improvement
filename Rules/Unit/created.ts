@@ -15,6 +15,7 @@ import City from '@civ-clone/core-city/City';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 import Created from '@civ-clone/core-unit/Rules/Created';
 import Criterion from '@civ-clone/core-rule/Criterion';
+import Description from '@civ-clone/core-rule/Description';
 import Effect from '@civ-clone/core-rule/Effect';
 import Land from '@civ-clone/base-unit-type-land/Land';
 import Naval from '@civ-clone/base-unit-type-naval/Naval';
@@ -60,6 +61,19 @@ export const getRules = (
         ),
         new Effect((unit: Unit): void =>
           unitImprovementRegistry.register(new Veteran(unit))
+        ),
+        new Description(
+          { type: 'veteran_units', subject: Improvement, unit: Domain },
+          ...(WonderType === null
+            ? []
+            : [
+                {
+                  type: 'veteran_units',
+                  subject: WonderType,
+                  unit: Domain,
+                  scope: 'player',
+                },
+              ])
         )
       )
   );

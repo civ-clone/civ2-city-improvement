@@ -16,6 +16,7 @@ import { cityDefenceMultiplier, sdiMissileAttackBelow } from '../../data/rules';
 import Air from '@civ-clone/base-unit-type-air/Air';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 import Criterion from '@civ-clone/core-rule/Criterion';
+import Description from '@civ-clone/core-rule/Description';
 import Effect from '@civ-clone/core-rule/Effect';
 import Interceptor from '@civ-clone/base-unit-trait-interceptor/Interceptor';
 import Naval from '@civ-clone/base-unit-type-naval/Naval';
@@ -64,7 +65,14 @@ export const getRules = (
       new Criterion((attacker: Unit, defender: Unit): boolean =>
         inCityWith(defender, CoastalFortress)
       ),
-      doubled(CoastalFortress)
+      doubled(CoastalFortress),
+      new Description({
+        type: 'defence_multiplier',
+        subject: CoastalFortress,
+        value: cityDefenceMultiplier,
+        against: [Naval],
+        notFor: [Naval],
+      })
     ),
     new Strength(
       `civ2-city-improvement:unit/strength/${SdiDefence.name}`,
@@ -77,7 +85,13 @@ export const getRules = (
       new Criterion((attacker: Unit, defender: Unit): boolean =>
         inCityWith(defender, SdiDefence)
       ),
-      doubled(SdiDefence)
+      doubled(SdiDefence),
+      new Description({
+        type: 'defence_multiplier',
+        subject: SdiDefence,
+        value: cityDefenceMultiplier,
+        against: [SingleUse],
+      })
     ),
     new Strength(
       `civ2-city-improvement:unit/strength/${SamMissileBattery.name}`,
@@ -85,7 +99,13 @@ export const getRules = (
       new Criterion((attacker: Unit, defender: Unit): boolean =>
         inCityWith(defender, SamMissileBattery)
       ),
-      doubled(SamMissileBattery)
+      doubled(SamMissileBattery),
+      new Description({
+        type: 'defence_multiplier',
+        subject: SamMissileBattery,
+        value: cityDefenceMultiplier,
+        against: [Air],
+      })
     ),
   ];
 };

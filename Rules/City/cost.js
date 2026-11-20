@@ -8,9 +8,13 @@ const GameDifficultyRegistry_1 = require("@civ-clone/core-difficulty/GameDifficu
 const PlayerGovernmentRegistry_1 = require("@civ-clone/core-government/PlayerGovernmentRegistry");
 const source_1 = require("../../lib/source");
 const upkeep_1 = require("../../lib/upkeep");
+const Wonders_1 = require("../../Wonders");
+const Governments_1 = require("@civ-clone/civ2-city/Governments");
+const rules_1 = require("../../data/rules");
 const Cost_1 = require("@civ-clone/core-city/Rules/Cost");
 const MilitaryUnhappiness_1 = require("@civ-clone/base-city-yield-military-unhappiness/MilitaryUnhappiness");
 const Criterion_1 = require("@civ-clone/core-rule/Criterion");
+const Description_1 = require("@civ-clone/core-rule/Description");
 const governments_1 = require("@civ-clone/civ2-rules/data/governments");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const Low_1 = require("@civ-clone/core-rule/Priorities/Low");
@@ -51,10 +55,31 @@ const getRules = (dependencies = {}) => {
                     ? [new Yields_1.CityImprovementMaintenanceGold(cost, improvement)]
                     : [];
             });
+        }), new Description_1.default(
+        // Each @IMPROVE row's upkeep, where there is one.
+        ...improvements_1.default
+            .filter(([, , upkeep]) => upkeep > 0)
+            .map(([Improvement, , upkeep]) => ({
+            type: 'upkeep',
+            subject: Improvement,
+            yield: Yields_1.CityImprovementMaintenanceGold,
+            value: upkeep,
+        })), ...upkeep_1.freeUnderFundamentalism.map((Improvement) => ({
+            type: 'upkeep',
+            subject: Improvement,
+            yield: Yields_1.CityImprovementMaintenanceGold,
+            value: 0,
+            with: [Governments_1.Fundamentalism],
+        })), {
+            type: 'pays_upkeep',
+            subject: Wonders_1.AdamSmithsTradingCompany,
+            value: rules_1.adamSmithUpkeep,
+            scope: 'player',
         })),
         // The content citizens of the city's improvements (`lib/content`), after the luxuries and before civ2-city-happiness's
         //  martial law (3500), as `Low`.
         ...content_1.contents.map((content) => {
+            var _a;
             // Worked out once a `yields()` call, for the criterion and the effect both.
             const known = new WeakMap(), of = (city, yields) => {
                 if (!known.has(yields)) {
@@ -65,14 +90,27 @@ const getRules = (dependencies = {}) => {
             return new Cost_1.default(`civ2-city-improvement:city/cost/content/${content.name}`, new Low_1.default(), new Criterion_1.default((city, yields) => of(city, yields) !== null), new Criterion_1.default((city, yields) => stageTwoUnhappy(yields) > 0), new Effect_1.default((city, yields) => {
                 const { source, value } = of(city, yields);
                 return new Yields_1.CityImprovementContent(Math.min(value, stageTwoUnhappy(yields)), source);
-            }));
+            }), new Description_1.default(...((_a = content_1.contentDescriptions.get(content)) !== null && _a !== void 0 ? _a : [])));
         }),
         // Under Democracy a Courthouse, or the Palace, makes one content citizen happy.
         new Cost_1.default('civ2-city-improvement:city/cost/courthouse-democracy', new Low_1.default(), new Criterion_1.default((city) => (0, government_1.default)(city.player(), playerGovernmentRegistry) === governments_1.DEMOCRACY), new Criterion_1.default((city) => (0, has_1.improvementOf)(city, CityImprovements_1.Courthouse, registries.cityImprovementRegistry) !== null ||
             (0, has_1.improvementOf)(city, CityImprovements_1.Palace, registries.cityImprovementRegistry) !==
                 null), new Effect_1.default((city) => {
             var _a;
-            return new Yields_1.Happiness(1, ((_a = (0, has_1.improvementOf)(city, CityImprovements_1.Courthouse, registries.cityImprovementRegistry)) !== null && _a !== void 0 ? _a : (0, has_1.improvementOf)(city, CityImprovements_1.Palace, registries.cityImprovementRegistry)).id());
+            return new Yields_1.Happiness(rules_1.courthouseDemocracyHappy, ((_a = (0, has_1.improvementOf)(city, CityImprovements_1.Courthouse, registries.cityImprovementRegistry)) !== null && _a !== void 0 ? _a : (0, has_1.improvementOf)(city, CityImprovements_1.Palace, registries.cityImprovementRegistry)).id());
+        }), 
+        // One between them: a Courthouse in the Palace's city adds nothing more.
+        new Description_1.default({
+            type: 'happy',
+            subject: CityImprovements_1.Courthouse,
+            value: rules_1.courthouseDemocracyHappy,
+            with: [Governments_1.Democracy],
+            notWith: [CityImprovements_1.Palace],
+        }, {
+            type: 'happy',
+            subject: CityImprovements_1.Palace,
+            value: rules_1.courthouseDemocracyHappy,
+            with: [Governments_1.Democracy],
         })),
     ];
 };
