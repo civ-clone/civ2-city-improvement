@@ -8,7 +8,7 @@ import {
   ClientRegistry,
   instance as clientRegistryInstance,
 } from '@civ-clone/core-client/ClientRegistry';
-import { Courthouse, Palace } from '../../CityImprovements';
+import { Barracks, Courthouse, Palace } from '../../CityImprovements';
 import {
   GameDifficultyRegistry,
   instance as gameDifficultyRegistryInstance,
@@ -19,6 +19,8 @@ import {
 } from '@civ-clone/core-government/PlayerGovernmentRegistry';
 import { Registries, withDefaults } from '../../lib/source';
 import {
+  barracksAdvances,
+  barracksUpkeep,
   freeUnderFundamentalism,
   paysUpkeep,
   upkeepFor,
@@ -34,6 +36,7 @@ import Description from '@civ-clone/core-rule/Description';
 import { DEMOCRACY } from '@civ-clone/civ2-rules/data/governments';
 import Effect from '@civ-clone/core-rule/Effect';
 import Low from '@civ-clone/core-rule/Priorities/Low';
+import { Prince } from '@civ-clone/civ2-difficulty/Difficulties';
 import Yield from '@civ-clone/core-yield/Yield';
 import { Content, contentDescriptions, contents } from '../../lib/content';
 import governmentOf from '@civ-clone/civ2-city/lib/government';
@@ -55,6 +58,24 @@ export interface CostDependencies extends Registries {
 const stageTwoUnhappy = (yields: Yield[]): number =>
   reduceYield(yields, Unhappiness) -
   reduceYield(yields, MilitaryUnhappiness as unknown as typeof Yield);
+
+/**
+ * What Barracks cost (`lib/upkeep`'s `barracksUpkeep`), a line for each stage: below Prince and from Prince up, before
+ *  the first of `barracksAdvances`, between each and the next, and after the last.
+ */
+const barracksUpkeepLines = () =>
+  [true, false].flatMap((below: boolean) =>
+    [...barracksAdvances, null].map((Until, index) => ({
+      type: 'upkeep',
+      subject: Barracks,
+      yield: CityImprovementMaintenanceGold,
+      value: barracksUpkeep(below, index),
+      from: index === 0 ? undefined : barracksAdvances[index - 1],
+      until: Until ?? undefined,
+      below: below ? Prince : undefined,
+      atLeast: below ? undefined : Prince,
+    }))
+  );
 
 /** Each improvement's @IMPROVE row, the order Civ2 pays upkeep in (`city_pay_improvement_upkeep`). */
 const rowOf = new Map<Function, number>(
@@ -103,15 +124,18 @@ export const getRules = (dependencies: CostDependencies = {}): Cost[] => {
           });
       }),
       new Description(
-        // Each @IMPROVE row's upkeep, where there is one.
+        // Each @IMPROVE row's upkeep, where there is one, and the Barracks' by difficulty and advance.
         ...improvements
-          .filter(([, , upkeep]) => upkeep > 0)
+          .filter(
+            ([Improvement, , upkeep]) => upkeep > 0 && Improvement !== Barracks
+          )
           .map(([Improvement, , upkeep]) => ({
             type: 'upkeep',
             subject: Improvement,
             yield: CityImprovementMaintenanceGold,
             value: upkeep,
           })),
+        ...barracksUpkeepLines(),
         ...freeUnderFundamentalism.map((Improvement) => ({
           type: 'upkeep',
           subject: Improvement,

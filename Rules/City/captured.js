@@ -16,7 +16,9 @@ const SpaceshipRegistry_1 = require("@civ-clone/core-spaceship/SpaceshipRegistry
 const founder_1 = require("@civ-clone/civ2-city/lib/founder");
 const isHuman_1 = require("@civ-clone/civ2-difficulty/isHuman");
 const rules_1 = require("../../data/rules");
+const Description_1 = require("@civ-clone/core-rule/Description");
 const core_random_1 = require("@civ-clone/core-random");
+const Yields_1 = require("../../Yields");
 const source_1 = require("../../lib/source");
 /** Lost when a city is taken by anyone but its founder (OpenCiv2 `city_capture_aftermath`). */
 exports.lostOnCapture = [
@@ -25,6 +27,8 @@ exports.lostOnCapture = [
     CityImprovements_1.Cathedral,
     CityImprovements_1.Courthouse,
 ];
+/** Those `lostOnCapture` that the `lost` rule takes: the Palace goes by a rule of its own. */
+const lostWithTheCity = exports.lostOnCapture.filter((Improvement) => Improvement !== CityImprovements_1.Palace);
 const rowOf = new Map(improvements_1.default.map(([Improvement], index) => [Improvement, index + 1]));
 // OpenCiv2 `src/auto/city.cpp` `city_capture_aftermath` (richardpenman/civ2@49f26ec), in its order:
 //  - a player that loses its capital may buy the Palace into another city for 1000 gold (`lib/capital`): a computer
@@ -72,10 +76,17 @@ const getRules = (dependencies = {}, randomNumberGenerator = core_random_1.insta
                     loseShip();
                 }
             }, loseShip);
+        }), 
+        // Its conditions (the city's size, the difficulty, the owner's cities and gold) are left to the code.
+        new Description_1.default({
+            type: 'palace_escape',
+            subject: CityImprovements_1.Palace,
+            value: rules_1.palaceEscapeCost,
+            yield: Yields_1.Gold,
         })),
         new Captured_1.default('civ2-city-improvement:city/captured/palace', new Effect_1.default((city) => standing(city)
             .filter((improvement) => improvement instanceof CityImprovements_1.Palace)
-            .forEach((palace) => palace.destroy()))),
+            .forEach((palace) => palace.destroy())), new Description_1.default({ type: 'lost_on_capture', subject: CityImprovements_1.Palace })),
         new Captured_1.default('civ2-city-improvement:city/captured/lost', new Criterion_1.default((city, capturer, loser) => (0, founder_1.founderOf)(city, loser, dependencies) !== capturer), new Effect_1.default((city, capturer, loser, cause) => {
             standing(city)
                 .filter((improvement) => exports.lostOnCapture.some((Lost) => improvement instanceof Lost))
@@ -85,7 +96,7 @@ const getRules = (dependencies = {}, randomNumberGenerator = core_random_1.insta
                 return;
             }
             // One roll decides whether the odd rows are kept or the even ones.
-            const keepOdd = randomNumberGenerator() < 0.5;
+            const keepOdd = randomNumberGenerator() < rules_1.captureKeepOddRowsChance;
             standing(city)
                 .filter((improvement) => {
                 var _a;
@@ -93,7 +104,23 @@ const getRules = (dependencies = {}, randomNumberGenerator = core_random_1.insta
                     (keepOdd ? 0 : 1);
             })
                 .forEach((improvement) => improvement.destroy());
-        })),
+        }), 
+        // Taken by anyone but the founder: these always, and on a conquest each of the rest at even odds (an odd row's is
+        //  lost when the even rows are kept, and so the other way round).
+        new Description_1.default(...lostWithTheCity.map((Improvement) => ({
+            type: 'lost_on_capture',
+            subject: Improvement,
+            unless: 'founder',
+        })), ...improvements_1.default
+            .filter(([Improvement]) => Improvement !== CityImprovements_1.Palace && !exports.lostOnCapture.includes(Improvement))
+            .map(([Improvement]) => ({
+            type: 'lost_on_capture',
+            subject: Improvement,
+            unless: 'founder',
+            value: rowOf.get(Improvement) % 2 === 0
+                ? rules_1.captureKeepOddRowsChance
+                : 1 - rules_1.captureKeepOddRowsChance,
+        })))),
     ];
 };
 exports.getRules = getRules;

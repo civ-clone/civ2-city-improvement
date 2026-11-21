@@ -18,6 +18,7 @@ const Description_1 = require("@civ-clone/core-rule/Description");
 const governments_1 = require("@civ-clone/civ2-rules/data/governments");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const Low_1 = require("@civ-clone/core-rule/Priorities/Low");
+const Difficulties_1 = require("@civ-clone/civ2-difficulty/Difficulties");
 const content_1 = require("../../lib/content");
 const government_1 = require("@civ-clone/civ2-city/lib/government");
 const improvements_1 = require("../../data/improvements");
@@ -30,6 +31,20 @@ const reduceYields_1 = require("@civ-clone/core-yield/lib/reduceYields");
  */
 const stageTwoUnhappy = (yields) => (0, reduceYields_1.reduceYield)(yields, Yields_1.Unhappiness) -
     (0, reduceYields_1.reduceYield)(yields, MilitaryUnhappiness_1.default);
+/**
+ * What Barracks cost (`lib/upkeep`'s `barracksUpkeep`), a line for each stage: below Prince and from Prince up, before
+ *  the first of `barracksAdvances`, between each and the next, and after the last.
+ */
+const barracksUpkeepLines = () => [true, false].flatMap((below) => [...upkeep_1.barracksAdvances, null].map((Until, index) => ({
+    type: 'upkeep',
+    subject: CityImprovements_1.Barracks,
+    yield: Yields_1.CityImprovementMaintenanceGold,
+    value: (0, upkeep_1.barracksUpkeep)(below, index),
+    from: index === 0 ? undefined : upkeep_1.barracksAdvances[index - 1],
+    until: Until !== null && Until !== void 0 ? Until : undefined,
+    below: below ? Difficulties_1.Prince : undefined,
+    atLeast: below ? undefined : Difficulties_1.Prince,
+})));
 /** Each improvement's @IMPROVE row, the order Civ2 pays upkeep in (`city_pay_improvement_upkeep`). */
 const rowOf = new Map(improvements_1.default.map(([Improvement], index) => [Improvement, index]));
 const getRules = (dependencies = {}) => {
@@ -56,15 +71,15 @@ const getRules = (dependencies = {}) => {
                     : [];
             });
         }), new Description_1.default(
-        // Each @IMPROVE row's upkeep, where there is one.
+        // Each @IMPROVE row's upkeep, where there is one, and the Barracks' by difficulty and advance.
         ...improvements_1.default
-            .filter(([, , upkeep]) => upkeep > 0)
+            .filter(([Improvement, , upkeep]) => upkeep > 0 && Improvement !== CityImprovements_1.Barracks)
             .map(([Improvement, , upkeep]) => ({
             type: 'upkeep',
             subject: Improvement,
             yield: Yields_1.CityImprovementMaintenanceGold,
             value: upkeep,
-        })), ...upkeep_1.freeUnderFundamentalism.map((Improvement) => ({
+        })), ...barracksUpkeepLines(), ...upkeep_1.freeUnderFundamentalism.map((Improvement) => ({
             type: 'upkeep',
             subject: Improvement,
             yield: Yields_1.CityImprovementMaintenanceGold,

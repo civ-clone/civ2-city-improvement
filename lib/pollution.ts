@@ -26,6 +26,7 @@ import {
   pollutionRollCeiling,
   pollutionTolerance,
   populationPollutionDivisor,
+  solarPlantPopulationSteps,
 } from '../data/rules';
 import City from '@civ-clone/core-city/City';
 import Yield from '@civ-clone/core-yield/Yield';
@@ -76,7 +77,7 @@ export const populationFactor = (
   }
 
   if (factor !== 0 && has(city, SolarPlant, registries)) {
-    factor--;
+    factor -= solarPlantPopulationSteps;
   }
 
   return factor;

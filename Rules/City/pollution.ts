@@ -34,6 +34,7 @@ import Description from '@civ-clone/core-rule/Description';
 import { MassTransit, SolarPlant } from '../../CityImprovements';
 import Effect from '@civ-clone/core-rule/Effect';
 import { POLLUTION_RULE } from '../../RuleIds';
+import { solarPlantPopulationSteps } from '../../data/rules';
 import { Pollution } from '@civ-clone/civ2-world/TileImprovements';
 import ProcessYield from '@civ-clone/core-city/Rules/ProcessYield';
 import { Production } from '../../Yields';
@@ -112,6 +113,12 @@ export const getRules = (
           type: 'pollution_source_removed',
           subject: SolarPlant,
           source: 'production',
+        },
+        {
+          type: 'pollution_step',
+          subject: SolarPlant,
+          value: solarPlantPopulationSteps,
+          source: 'population',
         },
         {
           type: 'pollution_source_removed',

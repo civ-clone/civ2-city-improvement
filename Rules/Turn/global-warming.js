@@ -14,6 +14,8 @@ const level_1 = require("@civ-clone/base-global-warming/lib/level");
 const globalWarming_1 = require("../../lib/globalWarming");
 const rules_1 = require("../../data/rules");
 const Criterion_1 = require("@civ-clone/core-rule/Criterion");
+const Description_1 = require("@civ-clone/core-rule/Description");
+const CityImprovements_1 = require("../../CityImprovements");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const Priorities_1 = require("@civ-clone/core-rule/Priorities");
 const TileImprovements_1 = require("@civ-clone/civ2-world/TileImprovements");
@@ -54,7 +56,13 @@ const getRules = ({ cityImprovementRegistry = CityImprovementRegistry_1.instance
     new WarmingPollution_1.default(RuleIds_1.WARMING_POLLUTION_RULE, new Effect_1.default((squares) => (0, pollution_1.discounted)((0, globalWarming_1.computerCityRadii)({ cityRegistry, clientRegistry }), rules_1.warmingComputerDivisor)(squares))),
     new WarmingTarget_1.default(RuleIds_1.WARMING_TARGET_RULE, new Effect_1.default((pollution, warmings) => rules_1.warmingPollutionFactor * pollution -
         rules_1.warmingPerWarming * warmings -
-        (0, globalWarming_1.solarPlantCities)({ cityImprovementRegistry }))),
+        (0, globalWarming_1.solarPlantCities)({ cityImprovementRegistry })), 
+    // Each city with one, whoever's, takes one off the target.
+    new Description_1.default({
+        type: 'global_warming',
+        subject: CityImprovements_1.SolarPlant,
+        step: 'fewer',
+    })),
     new WarmingLevel_1.default(RuleIds_1.WARMING_LEVEL_RULE, new Effect_1.default((0, level_1.stepToward)(rules_1.warmingStep, rules_1.warmingMinimum, rules_1.warmingMaximum))),
     new WarmingWarning_1.default(RuleIds_1.WARMING_WARNING_RULE, new Effect_1.default((0, level_1.atLevel)(rules_1.warmingWarningLevel, rules_1.warmingWarningPollutionAbove))),
     new WarmingStrike_1.default(RuleIds_1.WARMING_STRIKE_RULE, new Effect_1.default((0, level_1.aboveLevel)(rules_1.warmingStrikeAboveLevel))),
