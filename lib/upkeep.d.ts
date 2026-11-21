@@ -3,10 +3,13 @@ import { PlayerGovernmentRegistry } from '@civ-clone/core-government/PlayerGover
 import { Registries } from './source';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 import Player from '@civ-clone/core-player/Player';
+import Advance from '@civ-clone/core-science/Advance';
 export interface UpkeepDependencies extends Registries {
   gameDifficultyRegistry?: GameDifficultyRegistry;
   playerGovernmentRegistry?: PlayerGovernmentRegistry;
 }
+/** The advances that each make Barracks cost `barracksAdvanceUpkeep` more, and sell them when discovered. */
+export declare const barracksAdvances: (typeof Advance)[];
 /** The improvements Fundamentalism keeps for nothing. */
 export declare const freeUnderFundamentalism: (typeof CityImprovement)[];
 /**
@@ -24,6 +27,14 @@ export declare const upkeepFor: (
     ...registries
   }?: UpkeepDependencies
 ) => (Improvement: typeof CityImprovement) => number;
+/**
+ * What Barracks cost, as `upkeepFor` reckons it, at each stage: below Prince or from Prince up (`below`), and with how
+ *  many of `barracksAdvances` known (the stage after the `index`th of them, as Mobile Warfare comes after Gunpowder).
+ */
+export declare const barracksUpkeep: (
+  below: boolean,
+  advancesKnown: number
+) => number;
 /** What `Improvement` costs `player` in gold a turn (`upkeepFor`). */
 export declare const upkeep: (
   Improvement: typeof CityImprovement,

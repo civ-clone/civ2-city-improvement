@@ -61,6 +61,8 @@ import {
   warmingWarningPollutionAbove,
 } from '../../data/rules';
 import Criterion from '@civ-clone/core-rule/Criterion';
+import Description from '@civ-clone/core-rule/Description';
+import { SolarPlant } from '../../CityImprovements';
 import Effect from '@civ-clone/core-rule/Effect';
 import { Low } from '@civ-clone/core-rule/Priorities';
 import { Pollution } from '@civ-clone/civ2-world/TileImprovements';
@@ -146,7 +148,13 @@ export const getRules = ({
         warmingPollutionFactor * pollution -
         warmingPerWarming * warmings -
         solarPlantCities({ cityImprovementRegistry })
-    )
+    ),
+    // Each city with one, whoever's, takes one off the target.
+    new Description({
+      type: 'global_warming',
+      subject: SolarPlant,
+      step: 'fewer',
+    })
   ),
 
   new WarmingLevel(

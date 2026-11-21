@@ -15,6 +15,7 @@ const Description_1 = require("@civ-clone/core-rule/Description");
 const CityImprovements_1 = require("../../CityImprovements");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const RuleIds_1 = require("../../RuleIds");
+const rules_1 = require("../../data/rules");
 const TileImprovements_1 = require("@civ-clone/civ2-world/TileImprovements");
 const ProcessYield_1 = require("@civ-clone/core-city/Rules/ProcessYield");
 const Yields_1 = require("../../Yields");
@@ -41,6 +42,11 @@ const getRules = (dependencies = {}) => {
             type: 'pollution_source_removed',
             subject: CityImprovements_1.SolarPlant,
             source: 'production',
+        }, {
+            type: 'pollution_step',
+            subject: CityImprovements_1.SolarPlant,
+            value: rules_1.solarPlantPopulationSteps,
+            source: 'population',
         }, {
             type: 'pollution_source_removed',
             subject: CityImprovements_1.MassTransit,

@@ -40,6 +40,31 @@ import SingleUse from '@civ-clone/base-unit-trait-single-use/SingleUse';
 import UnitImprovementRegistry from '@civ-clone/core-unit-improvement/UnitImprovementRegistry';
 import Veteran from '@civ-clone/base-unit-improvement-veteran/UnitImprovements/Veteran';
 import { growthLimits } from '../lib/growthLimit';
+import {
+  Industrialization,
+  Sanitation,
+} from '@civ-clone/civ2-science/Advances';
+import { barracksAdvances } from '../lib/upkeep';
+import {
+  barracksPrinceLevel,
+  captureKeepOddRowsChance,
+  palaceEscapeCost,
+} from '../data/rules';
+import CityCreated from '@civ-clone/core-city/Rules/Created';
+import cityCreated from '../Rules/City/created';
+import InciteRevolt from '@civ-clone/base-unit-action-incite-revolt/InciteRevolt';
+import { Prince } from '@civ-clone/civ2-difficulty/Difficulties';
+import { populationFactor } from '../lib/pollution';
+import Captured from '@civ-clone/core-city/Rules/Captured';
+import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
+import Complete from '@civ-clone/core-science/Rules/Complete';
+import Engine from '@civ-clone/core-engine/Engine';
+import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
+import WarmingTarget from '@civ-clone/base-global-warming/Rules/WarmingTarget';
+import captured from '../Rules/City/captured';
+import globalWarming from '../Rules/Turn/global-warming';
+import improvementCreated from '../Rules/CityImprovement/created';
+import researchComplete from '../Rules/Player/research-complete';
 import { upkeepFor } from '../lib/upkeep';
 import improvements from '../data/improvements';
 import { EffectDescription } from '@civ-clone/core-rule/Description';
@@ -304,7 +329,9 @@ describe('descriptions', (): void => {
   it('an improvement costs the upkeep it says it does', (): void => {
     const cases = described(cost()).filter(
       ([, description]) =>
-        description.type === 'upkeep' && description.with === undefined
+        description.type === 'upkeep' &&
+        description.with === undefined &&
+        description.subject !== CityImprovements.Barracks
     );
 
     expect(cases.length).to.be.greaterThan(0);
@@ -687,5 +714,363 @@ describe('descriptions', (): void => {
         value: size,
       }))
     );
+  });
+
+  // civ-clone/web-renderer#1291.
+
+  it('says something of the Barracks, Solar Plant and Palace in each rule #1291 covers', (): void => {
+    const subjectsOf = (rules: Rule[], type: string): unknown[] =>
+      described(rules)
+        .filter(([, description]) => description.type === type)
+        .map(([, description]) => description.subject);
+
+    expect(subjectsOf(researchComplete(), 'sold_on')).eql([
+      CityImprovements.Barracks,
+      CityImprovements.Barracks,
+    ]);
+    expect(subjectsOf(globalWarming(), 'global_warming')).eql([
+      CityImprovements.SolarPlant,
+    ]);
+    expect(subjectsOf(pollution(), 'pollution_step')).eql([
+      CityImprovements.SolarPlant,
+    ]);
+    expect(subjectsOf(improvementCreated(), 'relocates')).eql([
+      CityImprovements.Palace,
+    ]);
+    expect(subjectsOf(captured(), 'palace_escape')).eql([
+      CityImprovements.Palace,
+    ]);
+    expect(subjectsOf(cityCreated(), 'free_in_first_city')).eql([
+      CityImprovements.Palace,
+    ]);
+    expect(subjectsOf(captured(), 'lost_on_capture')).to.include.members([
+      CityImprovements.Palace,
+      CityImprovements.Temple,
+      CityImprovements.Barracks,
+    ]);
+  });
+
+  it('Barracks cost what they say, below Prince and from it up, with each advance that raises them', (): void => {
+    expect(Prince.level()).to.equal(barracksPrinceLevel);
+
+    const lines = described(cost())
+      .map(([, description]) => description)
+      .filter(
+        (description) =>
+          description.type === 'upkeep' &&
+          description.subject === CityImprovements.Barracks
+      );
+
+    expect(lines.length).to.equal(2 * (barracksAdvances.length + 1));
+
+    lines.forEach((description): void => {
+      expect(
+        (description.below ?? description.atLeast) === Prince,
+        'below or at least Prince'
+      ).to.true;
+
+      const known =
+          description.from === undefined
+            ? []
+            : barracksAdvances.slice(
+                0,
+                barracksAdvances.indexOf(description.from as any) + 1
+              ),
+        until = barracksAdvances.indexOf(description.until as any);
+
+      if (description.until !== undefined) {
+        expect(until).to.equal(known.length);
+      }
+
+      expect(
+        upkeep(CityImprovements.Barracks, 'p' as any, {
+          ...registries(known),
+          gameDifficultyRegistry: atLevel(
+            description.below === Prince ? Prince.level() - 1 : Prince.level()
+          ),
+          playerGovernmentRegistry: governedBy(Democracy),
+        }),
+        JSON.stringify([description.below !== undefined, known.length])
+      ).to.equal(description.value);
+    });
+  });
+
+  it('each research rule sells the Barracks on the advance it says', (): void => {
+    researchComplete().forEach((rule): void => {
+      const [description] = rule.descriptions(),
+        [Advance] = description.with as any[];
+
+      expect(rule).to.be.instanceOf(Complete);
+      expect(rule.validate({} as any, new Advance())).to.true;
+      barracksAdvances
+        .filter((Other) => Other !== Advance)
+        .forEach((Other: any): void => {
+          expect(rule.validate({} as any, new Other())).to.false;
+        });
+    });
+
+    const r = registries(),
+      ruleRegistry = new RuleRegistry(),
+      city = cityOf('p'),
+      barracks = built(CityImprovements.Barracks, city);
+
+    r.cityImprovementRegistry.register(barracks);
+    ruleRegistry.register(
+      ...researchComplete(
+        r.cityImprovementRegistry,
+        { getByPlayer: () => [city] } as any,
+        new Engine(),
+        { getByPlayer: () => [] } as any
+      )
+    );
+    ruleRegistry.process(
+      Complete,
+      { player: () => 'p' } as any,
+      new (barracksAdvances[0] as any)()
+    );
+
+    expect(barracks.destroyed()).to.true;
+  });
+
+  it('a new Palace, which says it relocates, moves the capital', (): void => {
+    const r = registries(),
+      ruleRegistry = new RuleRegistry(),
+      rules = improvementCreated(r.cityImprovementRegistry, new Engine()),
+      [moves] = rules.filter((rule) =>
+        rule
+          .descriptions()
+          .some((description) => description.type === 'relocates')
+      );
+
+    expect(moves.id()).to.equal(
+      'civ2-city-improvement:city-improvement/created/move-capital'
+    );
+    expect(rules.map((rule) => rule.id())).to.eql([
+      'civ2-city-improvement:city-improvement/created/register',
+      'civ2-city-improvement:city-improvement/created/move-capital',
+      'civ2-city-improvement:city-improvement/created/emit',
+    ]);
+
+    ruleRegistry.register(...rules);
+
+    const first = new CityImprovements.Palace(cityOf('p'), ruleRegistry),
+      second = new CityImprovements.Palace(cityOf('p'), ruleRegistry);
+
+    expect(first.destroyed()).to.true;
+    expect(second.destroyed()).to.false;
+  });
+
+  it('each city with a Solar Plant takes a step off the warming target', (): void => {
+    const target = (solarPlants: number): number => {
+      const r = registries(),
+        [rule] = globalWarming({
+          cityImprovementRegistry: r.cityImprovementRegistry,
+        }).filter((rule) => rule instanceof WarmingTarget);
+
+      for (let i = 0; i < solarPlants; i++) {
+        r.cityImprovementRegistry.register(
+          built(CityImprovements.SolarPlant, cityOf('p'))
+        );
+      }
+
+      expect(rule.descriptions()).to.eql([
+        {
+          type: 'global_warming',
+          subject: CityImprovements.SolarPlant,
+          step: 'fewer',
+        },
+      ]);
+
+      return rule.process(10, 0) as number;
+    };
+
+    expect(target(0) - target(1)).to.equal(1);
+    expect(target(0) - target(3)).to.equal(3);
+  });
+
+  it("a Solar Plant takes the steps it says off its citizens' pollution", (): void => {
+    const [[, line]] = described(pollution()).filter(
+        ([, description]) => description.type === 'pollution_step'
+      ),
+      factor = (solarPlant: boolean): number => {
+        const r = registries([Industrialization, Sanitation]),
+          city = cityOf('p');
+
+        if (solarPlant) {
+          r.cityImprovementRegistry.register(
+            built(CityImprovements.SolarPlant, city)
+          );
+        }
+
+        return populationFactor(city, r);
+      };
+
+    expect(line.source).to.equal('population');
+    expect(factor(false) - factor(true)).to.equal(line.value);
+  });
+
+  it('a captured city loses what it says, always or at the chance it says', (): void => {
+    const lines = described(captured()).filter(
+        ([, description]) => description.type === 'lost_on_capture'
+      ),
+      chance = (
+        roll: number,
+        founder: unknown = 'someone',
+        cause: unknown = null
+      ) => {
+        const r = registries(),
+          ruleRegistry = new RuleRegistry(),
+          city = cityOf('taker', { originalPlayer: () => founder }),
+          standing = improvements.map(([Improvement]) =>
+            built(Improvement as typeof CityImprovement, city)
+          );
+
+        r.cityImprovementRegistry.register(...standing);
+        ruleRegistry.register(
+          ...captured(
+            {
+              ...r,
+              cityRegistry: { getByPlayer: () => [] } as any,
+              clientRegistry: playedBy(),
+              gameDifficultyRegistry: atLevel(0),
+            },
+            () => roll
+          )
+        );
+        ruleRegistry.process(
+          Captured,
+          city,
+          'taker' as any,
+          'loser' as any,
+          cause
+        );
+
+        return (Improvement: unknown): boolean =>
+          standing
+            .find((improvement) => improvement instanceof (Improvement as any))!
+            .destroyed();
+      },
+      // The roll's two outcomes: below the chance to keep the odd rows, and above it.
+      keepOdd = captureKeepOddRowsChance,
+      [low, high] = [chance(keepOdd / 2), chance((1 + keepOdd) / 2)];
+
+    expect(lines.map(([, description]) => description.subject)).to.have.members(
+      improvements.map(([Improvement]) => Improvement)
+    );
+
+    lines.forEach(([, description]): void => {
+      const lost =
+        keepOdd * Number(low(description.subject)) +
+        (1 - keepOdd) * Number(high(description.subject));
+
+      expect(lost, (description.subject as Class).name).to.equal(
+        description.value ?? 1
+      );
+    });
+
+    // Everything but the Palace is lost only unless the founder takes the city back, which keeps it whatever the roll.
+    const unlessFounder = lines.filter(
+        ([, description]) => description.unless === 'founder'
+      ),
+      chanceLines = unlessFounder.filter(
+        ([, description]) => description.value !== undefined
+      ),
+      rolls = [keepOdd / 2, (1 + keepOdd) / 2];
+
+    expect(
+      unlessFounder.map(([, description]) => description.subject)
+    ).to.have.members(
+      improvements
+        .map(([Improvement]) => Improvement)
+        .filter((Improvement) => Improvement !== CityImprovements.Palace)
+    );
+    expect(
+      chanceLines.map(([, description]) => description.subject)
+    ).to.include(CityImprovements.Marketplace);
+
+    rolls.forEach((roll): void => {
+      const retaken = chance(roll, 'taker'),
+        incited = chance(
+          roll,
+          'someone',
+          Object.create(InciteRevolt.prototype)
+        );
+
+      unlessFounder.forEach(([, description]): void => {
+        expect(
+          retaken(description.subject),
+          `retaken: ${(description.subject as Class).name}`
+        ).to.false;
+      });
+      expect(retaken(CityImprovements.Palace)).to.true;
+
+      // Incited, the chance lines are all kept; those always lost still are.
+      chanceLines.forEach(([, description]): void => {
+        expect(
+          incited(description.subject),
+          `incited: ${(description.subject as Class).name}`
+        ).to.false;
+      });
+      [
+        CityImprovements.Temple,
+        CityImprovements.Cathedral,
+        CityImprovements.Courthouse,
+      ].forEach((Improvement): void => {
+        expect(incited(Improvement), `incited: ${Improvement.name}`).to.true;
+      });
+    });
+  });
+
+  it('the Palace says what its escape costs, in the gold its owner pays', (): void => {
+    const [rule] = captured().filter(
+      (rule) =>
+        rule.id() === 'civ2-city-improvement:city/captured/palace-escape'
+    );
+
+    expect(rule.descriptions()).to.eql([
+      {
+        type: 'palace_escape',
+        subject: CityImprovements.Palace,
+        value: palaceEscapeCost,
+        yield: Gold,
+      },
+    ]);
+  });
+
+  it("a player's first city, which says it gets the Palace free, gets it, and a second doesn't", (): void => {
+    const r = registries(),
+      cities: unknown[] = [],
+      [rule] = cityCreated(
+        { getByPlayer: () => cities } as any,
+        r.cityImprovementRegistry,
+        new RuleRegistry()
+      ),
+      found = (): unknown => {
+        const city = cityOf('p');
+
+        cities.push(city);
+
+        if (rule.validate(city)) {
+          rule.process(city);
+        }
+
+        return city;
+      };
+
+    expect(rule).to.be.instanceOf(CityCreated);
+    expect(rule.id()).to.equal('civ2-city-improvement:city/created/palace');
+    expect(rule.descriptions()).to.eql([
+      { type: 'free_in_first_city', subject: CityImprovements.Palace },
+    ]);
+
+    const first = found(),
+      second = found();
+
+    expect(
+      r.cityImprovementRegistry
+        .getByType(CityImprovements.Palace)
+        .map((palace) => palace.city())
+    ).to.eql([first]);
+    expect(second).to.not.equal(first);
   });
 });

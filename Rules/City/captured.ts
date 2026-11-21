@@ -24,8 +24,10 @@ import cancelSpaceship from '@civ-clone/base-spaceship/lib/cancelSpaceship';
 import { instance as spaceshipRegistryInstance } from '@civ-clone/core-spaceship/SpaceshipRegistry';
 import { founderOf } from '@civ-clone/civ2-city/lib/founder';
 import isHuman from '@civ-clone/civ2-difficulty/isHuman';
-import { palaceEscapeCost } from '../../data/rules';
+import { captureKeepOddRowsChance, palaceEscapeCost } from '../../data/rules';
+import Description from '@civ-clone/core-rule/Description';
 import { instance as rngInstance } from '@civ-clone/core-random';
+import { Gold } from '../../Yields';
 import { withDefaults } from '../../lib/source';
 
 /** Lost when a city is taken by anyone but its founder (OpenCiv2 `city_capture_aftermath`). */
@@ -35,6 +37,11 @@ export const lostOnCapture: (typeof CityImprovement)[] = [
   Cathedral,
   Courthouse,
 ];
+
+/** Those `lostOnCapture` that the `lost` rule takes: the Palace goes by a rule of its own. */
+const lostWithTheCity = lostOnCapture.filter(
+  (Improvement) => Improvement !== Palace
+);
 
 const rowOf = new Map<Function, number>(
   improvements.map(([Improvement], index) => [Improvement, index + 1])
@@ -116,6 +123,13 @@ export const getRules = (
           },
           loseShip
         );
+      }),
+      // Its conditions (the city's size, the difficulty, the owner's cities and gold) are left to the code.
+      new Description({
+        type: 'palace_escape',
+        subject: Palace,
+        value: palaceEscapeCost,
+        yield: Gold,
       })
     ),
 
@@ -125,7 +139,8 @@ export const getRules = (
         standing(city)
           .filter((improvement) => improvement instanceof Palace)
           .forEach((palace) => palace.destroy())
-      )
+      ),
+      new Description({ type: 'lost_on_capture', subject: Palace })
     ),
 
     new Captured(
@@ -148,7 +163,7 @@ export const getRules = (
           }
 
           // One roll decides whether the odd rows are kept or the even ones.
-          const keepOdd = randomNumberGenerator() < 0.5;
+          const keepOdd = randomNumberGenerator() < captureKeepOddRowsChance;
 
           standing(city)
             .filter(
@@ -158,6 +173,29 @@ export const getRules = (
             )
             .forEach((improvement) => improvement.destroy());
         }
+      ),
+      // Taken by anyone but the founder: these always, and on a conquest each of the rest at even odds (an odd row's is
+      //  lost when the even rows are kept, and so the other way round).
+      new Description(
+        ...lostWithTheCity.map((Improvement) => ({
+          type: 'lost_on_capture',
+          subject: Improvement,
+          unless: 'founder',
+        })),
+        ...improvements
+          .filter(
+            ([Improvement]) =>
+              Improvement !== Palace && !lostOnCapture.includes(Improvement)
+          )
+          .map(([Improvement]) => ({
+            type: 'lost_on_capture',
+            subject: Improvement,
+            unless: 'founder',
+            value:
+              rowOf.get(Improvement)! % 2 === 0
+                ? captureKeepOddRowsChance
+                : 1 - captureKeepOddRowsChance,
+          }))
       )
     ),
   ];

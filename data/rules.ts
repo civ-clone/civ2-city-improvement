@@ -61,8 +61,16 @@ export const populationPollutionDivisor = 4;
 /** `city_process_pollution`: the roll is out of 256 less half the advances known × the level. */
 export const pollutionRollCeiling = 256;
 
+/** `city_calc_shields_pollution`: a Solar Plant takes this many steps off the citizens' pollution factor. */
+export const solarPlantPopulationSteps = 1;
+
 /** `civ_improvement_upkeep`: Barracks cost 1 less below Prince, 1 more with Gunpowder and 1 more with Mobile Warfare. */
 export const barracksPrinceLevel = 2;
+export const barracksBelowPrinceDiscount = 1;
+export const barracksAdvanceUpkeep = 1;
+
+/** `city_capture_aftermath`: one roll, at even odds, keeps the improvements in odd @IMPROVE rows or those in even ones. */
+export const captureKeepOddRowsChance = 0.5;
 
 /** `city_capture_aftermath_palace_escape`: what it costs to save the Palace, and who may. */
 export const palaceEscapeCost = 1000;

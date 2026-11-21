@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.warmingPatternMask = exports.warmingInlandOceansBelow = exports.warmingStrikeAboveLevel = exports.warmingWarningPollutionAbove = exports.warmingWarningLevel = exports.warmingComputerDivisor = exports.warmingPerWarming = exports.warmingPollutionFactor = exports.warmingMaximum = exports.warmingMinimum = exports.warmingStep = exports.bachContent = exports.sdiMissileAttackBelow = exports.cityDefenceMultiplier = exports.palaceEscapeGold = exports.palaceEscapeCities = exports.palaceEscapeAboveLevel = exports.palaceEscapeMinimumSize = exports.palaceEscapeCost = exports.barracksPrinceLevel = exports.pollutionRollCeiling = exports.populationPollutionDivisor = exports.pollutionTolerance = exports.plantQuarters = exports.manufacturingPlantQuarters = exports.factoryQuarters = exports.superhighwaysDivisor = exports.supermarketShift = exports.offshorePlatformProduction = exports.harbourFood = exports.adamSmithUpkeep = exports.courthouseDemocracyHappy = exports.courthouseCorruptionDivisor = exports.cityBonusShift = exports.oracleMultiplier = exports.templeContentPerAdvance = exports.cathedralCommunismContent = exports.cathedralTheologyContent = exports.cathedralContent = exports.colosseumElectronicsContent = exports.colosseumContent = exports.sewerSize = exports.aqueductSize = exports.granaryStore = exports.granaryRowsPerCitizen = void 0;
+exports.warmingPatternMask = exports.warmingInlandOceansBelow = exports.warmingStrikeAboveLevel = exports.warmingWarningPollutionAbove = exports.warmingWarningLevel = exports.warmingComputerDivisor = exports.warmingPerWarming = exports.warmingPollutionFactor = exports.warmingMaximum = exports.warmingMinimum = exports.warmingStep = exports.bachContent = exports.sdiMissileAttackBelow = exports.cityDefenceMultiplier = exports.palaceEscapeGold = exports.palaceEscapeCities = exports.palaceEscapeAboveLevel = exports.palaceEscapeMinimumSize = exports.palaceEscapeCost = exports.captureKeepOddRowsChance = exports.barracksAdvanceUpkeep = exports.barracksBelowPrinceDiscount = exports.barracksPrinceLevel = exports.solarPlantPopulationSteps = exports.pollutionRollCeiling = exports.populationPollutionDivisor = exports.pollutionTolerance = exports.plantQuarters = exports.manufacturingPlantQuarters = exports.factoryQuarters = exports.superhighwaysDivisor = exports.supermarketShift = exports.offshorePlatformProduction = exports.harbourFood = exports.adamSmithUpkeep = exports.courthouseDemocracyHappy = exports.courthouseCorruptionDivisor = exports.cityBonusShift = exports.oracleMultiplier = exports.templeContentPerAdvance = exports.cathedralCommunismContent = exports.cathedralTheologyContent = exports.cathedralContent = exports.colosseumElectronicsContent = exports.colosseumContent = exports.sewerSize = exports.aqueductSize = exports.granaryStore = exports.granaryRowsPerCitizen = void 0;
 // Civilization II's city improvement numbers besides @IMPROVE's, each with the OpenCiv2 function it comes from
 //  (richardpenman/civ2@49f26ec). Numbers only.
 const cosmic_1 = require("@civ-clone/civ2-rules/data/cosmic");
@@ -46,8 +46,14 @@ exports.pollutionTolerance = 20;
 exports.populationPollutionDivisor = 4;
 /** `city_process_pollution`: the roll is out of 256 less half the advances known × the level. */
 exports.pollutionRollCeiling = 256;
+/** `city_calc_shields_pollution`: a Solar Plant takes this many steps off the citizens' pollution factor. */
+exports.solarPlantPopulationSteps = 1;
 /** `civ_improvement_upkeep`: Barracks cost 1 less below Prince, 1 more with Gunpowder and 1 more with Mobile Warfare. */
 exports.barracksPrinceLevel = 2;
+exports.barracksBelowPrinceDiscount = 1;
+exports.barracksAdvanceUpkeep = 1;
+/** `city_capture_aftermath`: one roll, at even odds, keeps the improvements in odd @IMPROVE rows or those in even ones. */
+exports.captureKeepOddRowsChance = 0.5;
 /** `city_capture_aftermath_palace_escape`: what it costs to save the Palace, and who may. */
 exports.palaceEscapeCost = 1000;
 exports.palaceEscapeMinimumSize = 8;

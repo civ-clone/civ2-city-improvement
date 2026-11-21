@@ -16,7 +16,13 @@ import { Registries, owns, withDefaults } from './source';
 import { AdamSmithsTradingCompany } from '../Wonders';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 import Player from '@civ-clone/core-player/Player';
-import { adamSmithUpkeep, barracksPrinceLevel } from '../data/rules';
+import {
+  adamSmithUpkeep,
+  barracksAdvanceUpkeep,
+  barracksBelowPrinceDiscount,
+  barracksPrinceLevel,
+} from '../data/rules';
+import Advance from '@civ-clone/core-science/Advance';
 import governmentOf from '@civ-clone/civ2-city/lib/government';
 import improvements from '../data/improvements';
 import { levelOf } from '@civ-clone/civ2-difficulty/level';
@@ -29,6 +35,9 @@ export interface UpkeepDependencies extends Registries {
 const rowUpkeep = new Map<Function, number>(
   improvements.map(([Improvement, , upkeep]) => [Improvement, upkeep])
 );
+
+/** The advances that each make Barracks cost `barracksAdvanceUpkeep` more, and sell them when discovered. */
+export const barracksAdvances: (typeof Advance)[] = [Gunpowder, MobileWarfare];
 
 /** The improvements Fundamentalism keeps for nothing. */
 export const freeUnderFundamentalism: (typeof CityImprovement)[] = [
@@ -63,16 +72,14 @@ export const upkeepFor = (
         withDefaults(registries).playerResearchRegistry.getByPlayer(player);
 
       if (levelOf(gameDifficultyRegistry) < barracksPrinceLevel && cost !== 0) {
-        cost--;
+        cost -= barracksBelowPrinceDiscount;
       }
 
-      if (research.completed(Gunpowder)) {
-        cost++;
-      }
-
-      if (research.completed(MobileWarfare)) {
-        cost++;
-      }
+      barracksAdvances.forEach((BarracksAdvance): void => {
+        if (research.completed(BarracksAdvance)) {
+          cost += barracksAdvanceUpkeep;
+        }
+      });
     }
 
     if (cost === adamSmithUpkeep) {
@@ -98,6 +105,23 @@ export const upkeepFor = (
 
     return cost;
   };
+};
+
+/**
+ * What Barracks cost, as `upkeepFor` reckons it, at each stage: below Prince or from Prince up (`below`), and with how
+ *  many of `barracksAdvances` known (the stage after the `index`th of them, as Mobile Warfare comes after Gunpowder).
+ */
+export const barracksUpkeep = (
+  below: boolean,
+  advancesKnown: number
+): number => {
+  let cost = rowUpkeep.get(Barracks) ?? 0;
+
+  if (below && cost !== 0) {
+    cost -= barracksBelowPrinceDiscount;
+  }
+
+  return cost + advancesKnown * barracksAdvanceUpkeep;
 };
 
 /** What `Improvement` costs `player` in gold a turn (`upkeepFor`). */

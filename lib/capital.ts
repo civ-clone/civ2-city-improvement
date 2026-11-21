@@ -179,7 +179,7 @@ export const palaceEscapeCandidate = (
 /**
  * Where a computer player whose capital was just taken moves its Palace, if it does (`city_capture_aftermath_palace_escape`):
  *  with more than 999 gold, to `palaceEscapeCandidate`'s city, and only above Prince, with a spaceship (civ2-spaceship's
- *  `hasSpaceship`: parts built, or launched), more than 11 cities or more than 1999 gold. `null` when it doesn't. A person is asked instead (`lib/palaceEscapeOffer`).
+ *  `hasSpaceship`: parts built, or launched), more than 11 cities or more than 1999 gold. `null` when it doesn't. A person is asked instead (`lib/palaceEscapeChoice`).
  */
 export const palaceEscape = (
   captured: City,
