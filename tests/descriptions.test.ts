@@ -41,6 +41,7 @@ import UnitImprovementRegistry from '@civ-clone/core-unit-improvement/UnitImprov
 import Veteran from '@civ-clone/base-unit-improvement-veteran/UnitImprovements/Veteran';
 import { growthLimits } from '../lib/growthLimit';
 import {
+  Environmentalism,
   Industrialization,
   Sanitation,
 } from '@civ-clone/civ2-science/Advances';
@@ -450,6 +451,50 @@ describe('descriptions', (): void => {
     expect(supermarket.value).to.equal(0.5);
   });
 
+  it("Sanitation and Environmentalism each say they take a step off the people's pollution, as populationFactor does", (): void => {
+    expect(
+      pollution()
+        .flatMap((rule) => rule.descriptions())
+        .filter(
+          ({ type, subject }) =>
+            type === 'pollution_step' && subject !== CityImprovements.SolarPlant
+        )
+    ).to.eql(
+      [Sanitation, Environmentalism].map((Advance) => ({
+        type: 'pollution_step',
+        subject: Advance,
+        value: 1,
+        source: 'population',
+        scope: 'player',
+      }))
+    );
+
+    // A city of a player who knows Industrialization: 2 steps without Sanitation, 1 with it, 0 with Environmentalism too.
+    const knowing = (...known: Function[]) =>
+      populationFactor({ player: () => 'p' } as never, {
+        cityImprovementRegistry: { getByCity: () => [] } as never,
+        playerResearchRegistry: {
+          getByPlayer: () => ({
+            completed: (Advance: Function) => known.includes(Advance),
+          }),
+        } as never,
+      });
+
+    expect(knowing(Industrialization)).to.equal(2);
+    expect(knowing(Industrialization, Sanitation)).to.equal(1);
+    expect(knowing(Industrialization, Sanitation, Environmentalism)).to.equal(
+      0
+    );
+  });
+
+  it('Pollution says only what passes the tolerance risks it', (): void => {
+    expect(
+      pollution()
+        .flatMap((rule) => rule.descriptions())
+        .filter(({ type }) => type === 'pollution_tolerance')
+    ).to.eql([{ type: 'pollution_tolerance', subject: Pollution, value: 20 }]);
+  });
+
   it('Pollution says what causes it: shields, and people for each polluting advance known', (): void => {
     expect(
       pollution()
@@ -770,6 +815,8 @@ describe('descriptions', (): void => {
     ]);
     expect(subjectsOf(pollution(), 'pollution_step')).eql([
       CityImprovements.SolarPlant,
+      Sanitation,
+      Environmentalism,
     ]);
     expect(subjectsOf(improvementCreated(), 'relocates')).eql([
       CityImprovements.Palace,

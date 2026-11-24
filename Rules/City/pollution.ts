@@ -34,7 +34,11 @@ import Description from '@civ-clone/core-rule/Description';
 import { MassTransit, SolarPlant } from '../../CityImprovements';
 import Effect from '@civ-clone/core-rule/Effect';
 import { POLLUTION_RULE } from '../../RuleIds';
-import { solarPlantPopulationSteps } from '../../data/rules';
+import {
+  pollutionTolerance,
+  solarPlantPopulationSteps,
+} from '../../data/rules';
+import { Environmentalism, Sanitation } from '@civ-clone/civ2-science/Advances';
 import { Pollution } from '@civ-clone/civ2-world/TileImprovements';
 import ProcessYield from '@civ-clone/core-city/Rules/ProcessYield';
 import { Production } from '../../Yields';
@@ -133,7 +137,22 @@ export const getRules = (
           subject: Pollution,
           source: 'population',
           with: pollutingAdvances,
-        }
+        },
+        // Only what passes the tolerance risks it, and the advances that move the people's step (`populationFactor`):
+        //  a step less with Sanitation (without it, one more) and with Environmentalism, once they pollute at all
+        //  (civ-clone/web-renderer#1339, civ-clone/web-renderer#1343).
+        {
+          type: 'pollution_tolerance',
+          subject: Pollution,
+          value: pollutionTolerance,
+        },
+        ...[Sanitation, Environmentalism].map((Advance) => ({
+          type: 'pollution_step',
+          subject: Advance,
+          value: 1,
+          source: 'population',
+          scope: 'player',
+        }))
       )
     ),
   ];

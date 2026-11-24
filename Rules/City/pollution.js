@@ -16,6 +16,7 @@ const CityImprovements_1 = require("../../CityImprovements");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const RuleIds_1 = require("../../RuleIds");
 const rules_1 = require("../../data/rules");
+const Advances_1 = require("@civ-clone/civ2-science/Advances");
 const TileImprovements_1 = require("@civ-clone/civ2-world/TileImprovements");
 const ProcessYield_1 = require("@civ-clone/core-city/Rules/ProcessYield");
 const Yields_1 = require("../../Yields");
@@ -59,7 +60,21 @@ const getRules = (dependencies = {}) => {
             subject: TileImprovements_1.Pollution,
             source: 'population',
             with: pollution_1.pollutingAdvances,
-        })),
+        }, 
+        // Only what passes the tolerance risks it, and the advances that move the people's step (`populationFactor`):
+        //  a step less with Sanitation (without it, one more) and with Environmentalism, once they pollute at all
+        //  (civ-clone/web-renderer#1339, civ-clone/web-renderer#1343).
+        {
+            type: 'pollution_tolerance',
+            subject: TileImprovements_1.Pollution,
+            value: rules_1.pollutionTolerance,
+        }, ...[Advances_1.Sanitation, Advances_1.Environmentalism].map((Advance) => ({
+            type: 'pollution_step',
+            subject: Advance,
+            value: 1,
+            source: 'population',
+            scope: 'player',
+        })))),
     ];
 };
 exports.getRules = getRules;
