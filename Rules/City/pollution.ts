@@ -141,13 +141,18 @@ export const getRules = (
         // Only what passes the tolerance risks it, and the advances that move the people's step (`populationFactor`):
         //  a step less with Sanitation (without it, one more) and with Environmentalism, once they pollute at all
         //  (civ-clone/web-renderer#1339, civ-clone/web-renderer#1343).
-        // Civ2's tolerance is the shields' alone (`city_calc_shields_pollution`), and goes with them under a Solar
-        //  Plant, which its own line says.
+        // The tolerance comes off the whole, as Civ1's does (the shields' part isn't held at 0), but a Solar Plant
+        //  takes it away with the shields' part (`city_calc_shields_pollution`), so there its people's pollution
+        //  risks it from the first point.
         {
           type: 'pollution_tolerance',
           subject: Pollution,
           value: pollutionTolerance,
-          source: 'production',
+        },
+        {
+          type: 'pollution_tolerance_removed',
+          subject: SolarPlant,
+          value: pollutionTolerance,
         },
         ...[Sanitation, Environmentalism].map((Advance) => ({
           type: 'pollution_step',

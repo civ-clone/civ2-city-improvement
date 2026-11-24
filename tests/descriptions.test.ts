@@ -487,17 +487,21 @@ describe('descriptions', (): void => {
     );
   });
 
-  it("Pollution says only shields past the tolerance risk it: it's the shields' alone in Civ2", (): void => {
+  it('Pollution says the tolerance comes off the whole, and a Solar Plant says it takes it away', (): void => {
     expect(
       pollution()
         .flatMap((rule) => rule.descriptions())
         .filter(({ type }) => type === 'pollution_tolerance')
+    ).to.eql([{ type: 'pollution_tolerance', subject: Pollution, value: 20 }]);
+    expect(
+      pollution()
+        .flatMap((rule) => rule.descriptions())
+        .filter(({ type }) => type === 'pollution_tolerance_removed')
     ).to.eql([
       {
-        type: 'pollution_tolerance',
-        subject: Pollution,
+        type: 'pollution_tolerance_removed',
+        subject: CityImprovements.SolarPlant,
         value: 20,
-        source: 'production',
       },
     ]);
   });
