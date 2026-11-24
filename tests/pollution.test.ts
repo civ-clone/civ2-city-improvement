@@ -96,6 +96,22 @@ describe('lib/pollution', (): void => {
     expect(solar.of(200)).equal(2);
   });
 
+  // What the Civilopedia says (civ-clone/web-renderer#1339): the tolerance comes off the whole, so a city's people's
+  //  pollution under it is soaked up by low shields; a Solar Plant takes the tolerance away with the shields.
+  it("takes the tolerance off the whole, so low shields soak up the people's pollution, but not with a Solar Plant", (): void => {
+    const plain = setUp([Industrialization, Automobile]),
+      solar = setUp([Industrialization, Automobile]);
+
+    // 2 advances + no Sanitation = 3 steps: 8 × 3 ÷ 4 = 6 from the people, less 20, as no shields don't make up.
+    expect(plain.of(0)).equal(0 - 20 + 6);
+    expect(plain.of(0)).lessThan(1);
+
+    solar.r.cityImprovementRegistry.register(built(SolarPlant, solar.city));
+    // 3 steps less the Solar Plant's 1: 8 × 2 ÷ 4 = 4, with no tolerance to come off.
+    expect(solar.of(0)).equal(4);
+    expect(solar.of(0)).greaterThan(0);
+  });
+
   it('rolls out of 256 less half the advances (from 1) times the level, halved above 255 with a Solar Plant', (): void => {
     const { city, r } = setUp([Industrialization, Automobile, Sanitation]);
 
