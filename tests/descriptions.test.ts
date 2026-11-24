@@ -487,12 +487,19 @@ describe('descriptions', (): void => {
     );
   });
 
-  it('Pollution says only what passes the tolerance risks it', (): void => {
+  it("Pollution says only shields past the tolerance risk it: it's the shields' alone in Civ2", (): void => {
     expect(
       pollution()
         .flatMap((rule) => rule.descriptions())
         .filter(({ type }) => type === 'pollution_tolerance')
-    ).to.eql([{ type: 'pollution_tolerance', subject: Pollution, value: 20 }]);
+    ).to.eql([
+      {
+        type: 'pollution_tolerance',
+        subject: Pollution,
+        value: 20,
+        source: 'production',
+      },
+    ]);
   });
 
   it('Pollution says what causes it: shields, and people for each polluting advance known', (): void => {
