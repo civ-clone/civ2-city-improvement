@@ -58,6 +58,14 @@ const getRules = ({ cityImprovementRegistry = CityImprovementRegistry_1.instance
             yield: Yields_1.Food,
             value: 1 / (1 << rules_1.supermarketShift),
             on: 'farmland',
+        }, 
+        // The same, on Farmland's own entry (civ-clone/web-renderer#1272).
+        {
+            type: 'square_yield_percent',
+            subject: TileImprovements_1.Farmland,
+            yield: Yields_1.Food,
+            value: 1 / (1 << rules_1.supermarketShift),
+            inCitiesWith: CityImprovements_1.Supermarket,
         })),
         new CityTileYield_1.default(`civ2-city-improvement:city/tile-yield/${CityImprovements_1.Superhighways.name}`, (0, tileYieldPipeline_1.tileYieldPriority)('superhighways'), new Criterion_1.default(has(CityImprovements_1.Superhighways)), 
         // A railroad is built on a road, so Civ2's road bit is set on it too.

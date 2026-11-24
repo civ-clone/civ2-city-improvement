@@ -51,6 +51,14 @@ const getRules = (dependencies = {}) => {
             type: 'pollution_source_removed',
             subject: CityImprovements_1.MassTransit,
             source: 'population',
+        }, 
+        // What causes Pollution (civ-clone/web-renderer#621): a city's shields, and its people, a step for each
+        //  polluting advance its player knows.
+        { type: 'caused_by', subject: TileImprovements_1.Pollution, source: 'production' }, {
+            type: 'caused_by',
+            subject: TileImprovements_1.Pollution,
+            source: 'population',
+            with: pollution_1.pollutingAdvances,
         })),
     ];
 };

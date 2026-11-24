@@ -27,7 +27,7 @@ import {
   TileImprovementRegistry,
   instance as tileImprovementRegistryInstance,
 } from '@civ-clone/core-tile-improvement/TileImprovementRegistry';
-import { pollution, rollRange } from '../../lib/pollution';
+import { pollutingAdvances, pollution, rollRange } from '../../lib/pollution';
 import City from '@civ-clone/core-city/City';
 import Criterion from '@civ-clone/core-rule/Criterion';
 import Description from '@civ-clone/core-rule/Description';
@@ -124,6 +124,15 @@ export const getRules = (
           type: 'pollution_source_removed',
           subject: MassTransit,
           source: 'population',
+        },
+        // What causes Pollution (civ-clone/web-renderer#621): a city's shields, and its people, a step for each
+        //  polluting advance its player knows.
+        { type: 'caused_by', subject: Pollution, source: 'production' },
+        {
+          type: 'caused_by',
+          subject: Pollution,
+          source: 'population',
+          with: pollutingAdvances,
         }
       )
     ),

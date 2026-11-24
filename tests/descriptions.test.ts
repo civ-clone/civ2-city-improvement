@@ -54,7 +54,8 @@ import CityCreated from '@civ-clone/core-city/Rules/Created';
 import cityCreated from '../Rules/City/created';
 import InciteRevolt from '@civ-clone/base-unit-action-incite-revolt/InciteRevolt';
 import { Prince } from '@civ-clone/civ2-difficulty/Difficulties';
-import { populationFactor } from '../lib/pollution';
+import { pollutingAdvances, populationFactor } from '../lib/pollution';
+import { Pollution } from '@civ-clone/civ2-world/TileImprovements';
 import Captured from '@civ-clone/core-city/Rules/Captured';
 import CityImprovement from '@civ-clone/core-city-improvement/CityImprovement';
 import Complete from '@civ-clone/core-science/Rules/Complete';
@@ -394,7 +395,10 @@ describe('descriptions', (): void => {
     ).to.equal(description.value);
   });
   it('a square gets the yield it says', (): void => {
-    const cases = described(tileYield());
+    // Farmland's own line says the Supermarket's again, from Farmland's side (civ-clone/web-renderer#1272).
+    const cases = described(tileYield()).filter(
+      ([, description]) => description.type !== 'square_yield_percent'
+    );
 
     expect(cases.length).to.equal(4);
 
@@ -427,6 +431,39 @@ describe('descriptions', (): void => {
         Subject.name
       ).to.equal(description.value);
     });
+  });
+
+  it("Farmland says what a Supermarket adds on it, as the Supermarket's own line does", (): void => {
+    const [[rule, farmland]] = described(tileYield()).filter(
+        ([, description]) => description.type === 'square_yield_percent'
+      ),
+      [supermarket] = rule.descriptions();
+
+    expect(farmland).to.eql({
+      type: 'square_yield_percent',
+      subject: Farmland,
+      yield: supermarket.yield,
+      value: supermarket.value,
+      inCitiesWith: CityImprovements.Supermarket,
+    });
+    expect(supermarket.subject).to.equal(CityImprovements.Supermarket);
+    expect(supermarket.value).to.equal(0.5);
+  });
+
+  it('Pollution says what causes it: shields, and people for each polluting advance known', (): void => {
+    expect(
+      pollution()
+        .flatMap((rule) => rule.descriptions())
+        .filter(({ type }) => type === 'caused_by')
+    ).to.eql([
+      { type: 'caused_by', subject: Pollution, source: 'production' },
+      {
+        type: 'caused_by',
+        subject: Pollution,
+        source: 'population',
+        with: pollutingAdvances,
+      },
+    ]);
   });
 
   it('a city defence multiplies the defence it says, against what it says', (): void => {

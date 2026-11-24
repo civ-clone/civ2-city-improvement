@@ -134,13 +134,23 @@ export const getRules = ({
       new Effect(
         adds(Food, (food) => food >> supermarketShift, Supermarket.name)
       ),
-      new Description({
-        type: 'tile_yield_percent',
-        subject: Supermarket,
-        yield: Food,
-        value: 1 / (1 << supermarketShift),
-        on: 'farmland',
-      })
+      new Description(
+        {
+          type: 'tile_yield_percent',
+          subject: Supermarket,
+          yield: Food,
+          value: 1 / (1 << supermarketShift),
+          on: 'farmland',
+        },
+        // The same, on Farmland's own entry (civ-clone/web-renderer#1272).
+        {
+          type: 'square_yield_percent',
+          subject: Farmland,
+          yield: Food,
+          value: 1 / (1 << supermarketShift),
+          inCitiesWith: Supermarket,
+        }
+      )
     ),
 
     new CityTileYield(
